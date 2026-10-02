@@ -29,7 +29,7 @@ flowchart LR
     H -.回归门.-> D
 ```
 
-## 快速开始（当前骨架能力）
+## 快速开始
 
 要求：Python ≥ 3.8，无第三方依赖。
 
@@ -42,7 +42,7 @@ py -X utf8 -m powerticket run <票据或目录> --report <docx路径/目录>    
 py -X utf8 -m powerticket report <票据>.txt             # 单票 docx 审核报告（需 .[report]）
 py -X utf8 -m powerticket web                           # Web 审核面板 http://127.0.0.1:8000（需 .[web]）
 py -X utf8 -m powerticket benchmark     # 内置基准：解析 F1 / 检出率 / 误报率（零 API 依赖）
-py -X utf8 -m pytest                    # 测试（203 项，全离线）
+py -X utf8 -m pytest                    # 测试（205 项，全离线）
 
 # 重新生成内置带真值评测集（固定 seed 位级一致，详见 data/generator/README.md）
 py -X utf8 data/generator/generate.py --force
