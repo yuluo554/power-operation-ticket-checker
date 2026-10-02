@@ -31,8 +31,10 @@ def test_check_outputs_result_json(capsys):
     out = capsys.readouterr().out
     assert rc == 0
     result = json.loads(out)
-    assert result["summary"]["合规"] == 2
-    assert result["conclusions"][0]["basis"]["standard"]
+    # M3 起 operating 有 4 条规则（required/time_order/five_prevention/consistency），样例全合规
+    assert result["summary"] == {"合规": 4, "不合规": 0, "待人工确认": 0}
+    for conclusion in result["conclusions"]:
+        assert conclusion["basis"]["standard"]
 
 
 def test_missing_file_friendly(capsys):

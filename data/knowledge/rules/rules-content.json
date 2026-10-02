@@ -1,0 +1,171 @@
+{
+  "description": "内涵校核规则（M3 正式库）：票种与停电需求匹配（ticket_type_match）/ 技术措施四要素覆盖（measure_coverage，直接消费 card.safety_measures）/ 五防形式化检查（five_prevention）/ 设备双重名称×电压等级互证（consistency）。五防与四要素依据为国家能源局官方原文（已核对）；票样类依据条文原文未获取，status=待核对。",
+  "rules": [
+    {
+      "id": "R-W1-007",
+      "name": "第一种工作票安全措施四要素覆盖",
+      "check_type": "measure_coverage",
+      "applies_to": ["work_first"],
+      "basis": {
+        "standard": "国能发安全〔2023〕22号",
+        "clause": "1.2.7",
+        "quote": "高压线路、设备停电检修时，应采取停电、验电、接地、悬挂标示牌和装设遮栏（围栏）等措施，作业人员应在接地装置的保护范围内作业。",
+        "channel": "国家能源局官网原文PDF（zfxxgk.nea.gov.cn，附件 1310705209_16796270109851n.pdf，2026-10-02 下载入库）",
+        "status": "已核对"
+      },
+      "level": "内涵合规",
+      "risk": "较大",
+      "suggestion": "对照保证安全的技术措施四要素（停电、验电、装设接地线、悬挂标示牌和装设遮栏）补全缺失措施后重新提交审核。",
+      "params": {
+        "elements": {
+          "停电": ["断开", "停电"],
+          "验电": ["验电"],
+          "装设接地线": ["接地线", "装设接地", "合上接地"],
+          "悬挂标示牌和装设遮栏": ["标示牌"]
+        }
+      }
+    },
+    {
+      "id": "R-LW1-007",
+      "name": "线路第一种工作票安全措施四要素覆盖",
+      "check_type": "measure_coverage",
+      "applies_to": ["line_work_first"],
+      "basis": {
+        "standard": "国能发安全〔2023〕22号",
+        "clause": "1.2.7",
+        "quote": "高压线路、设备停电检修时，应采取停电、验电、接地、悬挂标示牌和装设遮栏（围栏）等措施，作业人员应在接地装置的保护范围内作业。",
+        "channel": "国家能源局官网原文PDF（zfxxgk.nea.gov.cn，附件 1310705209_16796270109851n.pdf，2026-10-02 下载入库）",
+        "status": "已核对"
+      },
+      "level": "内涵合规",
+      "risk": "较大",
+      "suggestion": "对照保证安全的技术措施四要素（停电、验电、装设接地线、悬挂标示牌和装设遮栏）补全缺失措施后重新提交审核。",
+      "params": {
+        "elements": {
+          "停电": ["断开", "停电"],
+          "验电": ["验电"],
+          "装设接地线": ["接地线", "装设接地", "合上接地"],
+          "悬挂标示牌和装设遮栏": ["标示牌"]
+        }
+      }
+    },
+    {
+      "id": "R-W2-007",
+      "name": "第二种工作票不应含需停电作业",
+      "check_type": "ticket_type_match",
+      "applies_to": ["work_second"],
+      "basis": {
+        "standard": "Q/GDW 1799.1-2013",
+        "clause": "第二种工作票适用范围（不需停电的工作）",
+        "quote": "",
+        "channel": "官方条文解读出版物在线阅读页佐证（京东读书）；条文原文未获取",
+        "status": "待核对"
+      },
+      "level": "形式合规",
+      "risk": "较大",
+      "suggestion": "任务含需停电作业表述时，应改用第一种工作票并履行相应安全措施与许可流程。",
+      "params": {
+        "field": "task",
+        "forbidden_terms": ["停电"],
+        "exempt_terms": ["不需停电", "无需停电", "不停电"]
+      }
+    },
+    {
+      "id": "R-LW2-007",
+      "name": "线路第二种工作票不应含需停电作业",
+      "check_type": "ticket_type_match",
+      "applies_to": ["line_work_second"],
+      "basis": {
+        "standard": "Q/GDW 1799.2-2013",
+        "clause": "电力线路第二种工作票适用范围（不需停电的工作）",
+        "quote": "",
+        "channel": "官方条文解读出版物在线阅读页佐证（京东读书）；条文原文未获取",
+        "status": "待核对"
+      },
+      "level": "形式合规",
+      "risk": "较大",
+      "suggestion": "任务含需停电作业表述时，应改用电力线路第一种工作票并履行相应安全措施与许可流程。",
+      "params": {
+        "field": "task",
+        "forbidden_terms": ["停电"],
+        "exempt_terms": ["不需停电", "无需停电", "不停电"]
+      }
+    },
+    {
+      "id": "R-OP-003",
+      "name": "倒闸操作五防形式化检查",
+      "check_type": "five_prevention",
+      "applies_to": ["operating"],
+      "basis": {
+        "standard": "国能发安全〔2023〕22号",
+        "clause": "1.2.19",
+        "quote": "严禁无票操作、擅自修改操作票、擅自解除高压电气设备的防误操作闭锁装置，严禁带接地线（接地刀闸）合断路器（隔离开关），严禁带电挂（合）接地线（接地刀闸）和带负荷拉（合）隔离开关，严禁误入带电间隔。",
+        "channel": "国家能源局官网原文PDF（zfxxgk.nea.gov.cn，附件 1310705209_16796270109851n.pdf，2026-10-02 下载入库）",
+        "status": "已核对"
+      },
+      "level": "内涵合规",
+      "risk": "重大",
+      "suggestion": "核实操作序列：拉开隔离开关前必须断开相应断路器并确认其确在断开位置；合闸送电前必须拆除接地线（接地开关）；装设接地线前必须验电。防误形式化初查为序列内可判口径，请结合现场结线方式复核。",
+      "params": {
+        "variants": ["no_load_disconnector", "no_ground_close", "grounding_after_test"]
+      }
+    },
+    {
+      "id": "R-LOP-003",
+      "name": "线路倒闸操作五防形式化检查",
+      "check_type": "five_prevention",
+      "applies_to": ["line_operating"],
+      "basis": {
+        "standard": "国能发安全〔2023〕22号",
+        "clause": "1.2.19",
+        "quote": "严禁无票操作、擅自修改操作票、擅自解除高压电气设备的防误操作闭锁装置，严禁带接地线（接地刀闸）合断路器（隔离开关），严禁带电挂（合）接地线（接地刀闸）和带负荷拉（合）隔离开关，严禁误入带电间隔。",
+        "channel": "国家能源局官网原文PDF（zfxxgk.nea.gov.cn，附件 1310705209_16796270109851n.pdf，2026-10-02 下载入库）",
+        "status": "已核对"
+      },
+      "level": "内涵合规",
+      "risk": "重大",
+      "suggestion": "核实操作序列：拉开隔离开关前必须断开相应断路器并确认其确在断开位置；合闸送电前必须拆除接地线（接地开关）；装设接地线前必须验电。防误形式化初查为序列内可判口径，请结合现场结线方式复核。",
+      "params": {
+        "variants": ["no_load_disconnector", "no_ground_close", "grounding_after_test"]
+      }
+    },
+    {
+      "id": "R-OP-004",
+      "name": "操作任务与操作项电压等级互证",
+      "check_type": "consistency",
+      "applies_to": ["operating"],
+      "basis": {
+        "standard": "Q/GDW 1799.1-2013",
+        "clause": "设备双重名称标注要求",
+        "quote": "",
+        "channel": "官方条文解读出版物在线阅读页佐证（京东读书）；条文原文未获取",
+        "status": "待核对"
+      },
+      "level": "内涵合规",
+      "risk": "一般",
+      "suggestion": "任务与操作项中对同一设备标注的电压等级应一致；发现冲突时核对设备双重名称填写是否笔误或选错间隔。",
+      "params": {
+        "sources": ["task", "steps"]
+      }
+    },
+    {
+      "id": "R-LOP-004",
+      "name": "线路操作任务与操作项电压等级互证",
+      "check_type": "consistency",
+      "applies_to": ["line_operating"],
+      "basis": {
+        "standard": "Q/GDW 1799.2-2013",
+        "clause": "线路名称及杆号（双重名称）标注要求",
+        "quote": "",
+        "channel": "官方条文解读出版物在线阅读页佐证（京东读书）；条文原文未获取",
+        "status": "待核对"
+      },
+      "level": "内涵合规",
+      "risk": "一般",
+      "suggestion": "任务与操作项中对同一线路设备标注的电压等级应一致；发现冲突时核对线路名称及杆号填写是否笔误。",
+      "params": {
+        "sources": ["task", "steps"]
+      }
+    }
+  ]
+}

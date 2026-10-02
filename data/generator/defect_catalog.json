@@ -12,14 +12,14 @@
   ],
   "check_type_status": {
     "required_field": "M0 已实现",
-    "time_order": "M0 已实现（开始<结束）；许可落区间为 M3 扩展",
-    "process_signature": "规则 M3 实现",
-    "ticket_type_match": "规则 M3 实现",
-    "measure_coverage": "规则 M3 实现",
-    "five_prevention": "规则 M3 实现",
-    "consistency": "规则 M3 实现"
+    "time_order": "M0 已实现（开始<结束）；M3 扩展 in_window 模式：许可落计划区间（R-W?-004，permit_time_out_of_range 主判）+ 终结闭环（R-W?-005/006）",
+    "process_signature": "M3 已实现（工作票 issuer/permitor、抢修单 permitor）",
+    "ticket_type_match": "M3 已实现（第二种票任务含需停电表述即错配；任务缺失时跳过防归因双计）",
+    "measure_coverage": "M3 已实现（四要素关键词覆盖，直接消费 card.safety_measures）",
+    "five_prevention": "M3 已实现（三形式化口径：带负荷拉合隔离开关/带接地线合闸/装设接地线前验电）",
+    "consistency": "M3 已实现（设备双重名称×电压等级互证）"
   },
-  "also_expect_policy": "also_expect 只登记『由本仓已声明规则语义强制推出』的隐含结论（当前唯一来源：missing_field 注入时间字段 → time_order 因字段缺失判待人工确认=非 pass，M0 已实现）；不对未实现的 M3 规则行为做猜测。",
+  "also_expect_policy": "also_expect 只登记『由本仓已声明规则语义强制推出』的隐含结论（当前唯一来源：missing_field 注入时间字段 → time_order 因字段缺失判待人工确认=非 pass，M0 已实现）；不对未实现的规则行为做猜测。M3 起全集对账以『非 pass 集合 == expect ∪ also_expect』精确相等执行（M2 的 covered 子集口径已退役）。",
   "defect_types": [
     {
       "defect_type": "missing_field",

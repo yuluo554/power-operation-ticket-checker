@@ -1,0 +1,240 @@
+{
+  "description": "形式完整性规则（M3 正式库）：必填项完整性（required_field）+ 签字链缺环（process_signature）。既定口径：工作票/抢修单的签发人/许可人不进 required_field 参数，缺环归 process_signature 语义，防归因双计；操作票监护人/操作人双签缺环走 required_field（见 defect_catalog.json）。",
+  "rules": [
+    {
+      "id": "R-OP-001",
+      "name": "操作票必填项完整性",
+      "check_type": "required_field",
+      "applies_to": ["operating"],
+      "basis": {
+        "standard": "Q/GDW 1799.1-2013",
+        "clause": "附录 倒闸操作票格式（票样字段重构）",
+        "quote": "",
+        "channel": "官方条文解读出版物在线阅读页佐证（京东读书）；条文原文未获取",
+        "status": "待核对",
+        "note": "字段清单经公开渠道交叉重构，条文原文获取后升级为已核对"
+      },
+      "level": "形式合规",
+      "risk": "低",
+      "suggestion": "补全缺失的必填字段后重新提交审核。",
+      "params": {
+        "fields": ["ticket_no", "task", "start_time", "end_time", "dispatcher", "guardian", "operator"]
+      }
+    },
+    {
+      "id": "R-LOP-001",
+      "name": "线路操作票必填项完整性",
+      "check_type": "required_field",
+      "applies_to": ["line_operating"],
+      "basis": {
+        "standard": "Q/GDW 1799.2-2013",
+        "clause": "附录 电力线路倒闸操作票格式（票样字段重构）",
+        "quote": "",
+        "channel": "官方条文解读出版物在线阅读页佐证（京东读书）；条文原文未获取",
+        "status": "待核对",
+        "note": "字段清单经公开渠道交叉重构，条文原文获取后升级为已核对"
+      },
+      "level": "形式合规",
+      "risk": "低",
+      "suggestion": "补全缺失的必填字段后重新提交审核。",
+      "params": {
+        "fields": ["ticket_no", "task", "start_time", "end_time", "dispatcher", "guardian", "operator"]
+      }
+    },
+    {
+      "id": "R-W1-001",
+      "name": "第一种工作票必填项完整性",
+      "check_type": "required_field",
+      "applies_to": ["work_first"],
+      "basis": {
+        "standard": "Q/GDW 1799.1-2013",
+        "clause": "附录 第一种工作票格式（票样字段重构）",
+        "quote": "",
+        "channel": "官方条文解读出版物在线阅读页佐证（京东读书）；工作票栏目另经安全管理网佐证（safehoo.com）；条文原文未获取",
+        "status": "待核对",
+        "note": "签发人/许可人不在本项参数内，缺环归 R-W1-003（process_signature）"
+      },
+      "level": "形式合规",
+      "risk": "低",
+      "suggestion": "补全缺失的必填字段后重新提交审核。",
+      "params": {
+        "fields": ["ticket_no", "work_unit", "work_head", "crew", "location", "task", "plan_start", "plan_end", "permit_start", "end_time"]
+      }
+    },
+    {
+      "id": "R-W2-001",
+      "name": "第二种工作票必填项完整性",
+      "check_type": "required_field",
+      "applies_to": ["work_second"],
+      "basis": {
+        "standard": "Q/GDW 1799.1-2013",
+        "clause": "附录 第二种工作票格式（票样字段重构）",
+        "quote": "",
+        "channel": "官方条文解读出版物在线阅读页佐证（京东读书）；工作票栏目另经安全管理网佐证（safehoo.com）；条文原文未获取",
+        "status": "待核对",
+        "note": "签发人/许可人不在本项参数内，缺环归 R-W2-003（process_signature）"
+      },
+      "level": "形式合规",
+      "risk": "低",
+      "suggestion": "补全缺失的必填字段后重新提交审核。",
+      "params": {
+        "fields": ["ticket_no", "work_unit", "work_head", "crew", "location", "task", "plan_start", "plan_end", "permit_start", "end_time"]
+      }
+    },
+    {
+      "id": "R-LW1-001",
+      "name": "线路第一种工作票必填项完整性",
+      "check_type": "required_field",
+      "applies_to": ["line_work_first"],
+      "basis": {
+        "standard": "Q/GDW 1799.2-2013",
+        "clause": "附录 电力线路第一种工作票格式（票样字段重构）",
+        "quote": "",
+        "channel": "官方条文解读出版物在线阅读页佐证（京东读书）；条文原文未获取",
+        "status": "待核对",
+        "note": "签发人/许可人不在本项参数内，缺环归 R-LW1-003（process_signature）"
+      },
+      "level": "形式合规",
+      "risk": "低",
+      "suggestion": "补全缺失的必填字段后重新提交审核。",
+      "params": {
+        "fields": ["ticket_no", "work_unit", "work_head", "crew", "location", "task", "plan_start", "plan_end", "permit_start", "end_time"]
+      }
+    },
+    {
+      "id": "R-LW2-001",
+      "name": "线路第二种工作票必填项完整性",
+      "check_type": "required_field",
+      "applies_to": ["line_work_second"],
+      "basis": {
+        "standard": "Q/GDW 1799.2-2013",
+        "clause": "附录 电力线路第二种工作票格式（票样字段重构）",
+        "quote": "",
+        "channel": "官方条文解读出版物在线阅读页佐证（京东读书）；条文原文未获取",
+        "status": "待核对",
+        "note": "签发人/许可人不在本项参数内，缺环归 R-LW2-003（process_signature）"
+      },
+      "level": "形式合规",
+      "risk": "低",
+      "suggestion": "补全缺失的必填字段后重新提交审核。",
+      "params": {
+        "fields": ["ticket_no", "work_unit", "work_head", "crew", "location", "task", "plan_start", "plan_end", "permit_start", "end_time"]
+      }
+    },
+    {
+      "id": "R-ER-001",
+      "name": "抢修单必填项完整性",
+      "check_type": "required_field",
+      "applies_to": ["emergency_repair"],
+      "basis": {
+        "standard": "Q/GDW 1799.1-2013",
+        "clause": "附录 事故紧急抢修单格式（票样字段重构）",
+        "quote": "",
+        "channel": "官方条文解读出版物在线阅读页佐证（京东读书）；条文原文未获取",
+        "status": "待核对",
+        "note": "许可人（值班负责人）不在本项参数内，缺环归 R-ER-003（process_signature）"
+      },
+      "level": "形式合规",
+      "risk": "低",
+      "suggestion": "补全缺失的必填字段后重新提交审核。",
+      "params": {
+        "fields": ["ticket_no", "work_unit", "task", "start_time", "end_time", "work_head", "crew"]
+      }
+    },
+    {
+      "id": "R-W1-003",
+      "name": "第一种工作票签字链完整",
+      "check_type": "process_signature",
+      "applies_to": ["work_first"],
+      "basis": {
+        "standard": "国能发安全〔2023〕22号",
+        "clause": "3.2.1",
+        "quote": "严格执行操作票、工作票制度，并使“两票”制度标准化，管理规范化。",
+        "channel": "国家能源局官网原文PDF（zfxxgk.nea.gov.cn，附件 1310705209_16796270109851n.pdf，2026-10-02 下载入库）",
+        "status": "已核对"
+      },
+      "level": "形式合规",
+      "risk": "一般",
+      "suggestion": "补齐工作票签发人、工作许可人签字环节后重新提交审核。",
+      "params": {
+        "fields": ["issuer", "permitor"]
+      }
+    },
+    {
+      "id": "R-W2-003",
+      "name": "第二种工作票签字链完整",
+      "check_type": "process_signature",
+      "applies_to": ["work_second"],
+      "basis": {
+        "standard": "国能发安全〔2023〕22号",
+        "clause": "3.2.1",
+        "quote": "严格执行操作票、工作票制度，并使“两票”制度标准化，管理规范化。",
+        "channel": "国家能源局官网原文PDF（zfxxgk.nea.gov.cn，附件 1310705209_16796270109851n.pdf，2026-10-02 下载入库）",
+        "status": "已核对"
+      },
+      "level": "形式合规",
+      "risk": "一般",
+      "suggestion": "补齐工作票签发人、工作许可人签字环节后重新提交审核。",
+      "params": {
+        "fields": ["issuer", "permitor"]
+      }
+    },
+    {
+      "id": "R-LW1-003",
+      "name": "线路第一种工作票签字链完整",
+      "check_type": "process_signature",
+      "applies_to": ["line_work_first"],
+      "basis": {
+        "standard": "国能发安全〔2023〕22号",
+        "clause": "3.2.1",
+        "quote": "严格执行操作票、工作票制度，并使“两票”制度标准化，管理规范化。",
+        "channel": "国家能源局官网原文PDF（zfxxgk.nea.gov.cn，附件 1310705209_16796270109851n.pdf，2026-10-02 下载入库）",
+        "status": "已核对"
+      },
+      "level": "形式合规",
+      "risk": "一般",
+      "suggestion": "补齐工作票签发人、工作许可人签字环节后重新提交审核。",
+      "params": {
+        "fields": ["issuer", "permitor"]
+      }
+    },
+    {
+      "id": "R-LW2-003",
+      "name": "线路第二种工作票签字链完整",
+      "check_type": "process_signature",
+      "applies_to": ["line_work_second"],
+      "basis": {
+        "standard": "国能发安全〔2023〕22号",
+        "clause": "3.2.1",
+        "quote": "严格执行操作票、工作票制度，并使“两票”制度标准化，管理规范化。",
+        "channel": "国家能源局官网原文PDF（zfxxgk.nea.gov.cn，附件 1310705209_16796270109851n.pdf，2026-10-02 下载入库）",
+        "status": "已核对"
+      },
+      "level": "形式合规",
+      "risk": "一般",
+      "suggestion": "补齐工作票签发人、工作许可人签字环节后重新提交审核。",
+      "params": {
+        "fields": ["issuer", "permitor"]
+      }
+    },
+    {
+      "id": "R-ER-003",
+      "name": "抢修单许可签字完整",
+      "check_type": "process_signature",
+      "applies_to": ["emergency_repair"],
+      "basis": {
+        "standard": "国能发安全〔2023〕22号",
+        "clause": "3.2.1",
+        "quote": "严格执行操作票、工作票制度，并使“两票”制度标准化，管理规范化。",
+        "channel": "国家能源局官网原文PDF（zfxxgk.nea.gov.cn，附件 1310705209_16796270109851n.pdf，2026-10-02 下载入库）",
+        "status": "已核对"
+      },
+      "level": "形式合规",
+      "risk": "一般",
+      "suggestion": "补齐许可人（值班负责人）签字环节后重新提交审核。",
+      "params": {
+        "fields": ["permitor"]
+      }
+    }
+  ]
+}

@@ -1,0 +1,428 @@
+{
+  "description": "时间逻辑规则（M3 正式库）：interval 模式（start<end）+ in_window 模式（许可开始时间落计划区间 = permit_time_out_of_range 缺陷主判；终结不早于许可；终结超计划区间提示办延期，on_violation=manual 不硬判）。字段缺失/值非法一律待人工确认。",
+  "rules": [
+    {
+      "id": "R-OP-002",
+      "name": "操作时间顺序合法",
+      "check_type": "time_order",
+      "applies_to": ["operating"],
+      "basis": {
+        "standard": "Q/GDW 1799.1-2013",
+        "clause": "倒闸操作票时间栏目（操作开始/结束时间先后逻辑）",
+        "quote": "",
+        "channel": "官方条文解读出版物在线阅读页佐证（京东读书）；条文原文未获取",
+        "status": "待核对"
+      },
+      "level": "形式合规",
+      "risk": "一般",
+      "suggestion": "核对操作开始/结束时间填写是否颠倒。",
+      "params": {
+        "mode": "interval",
+        "start": "start_time",
+        "end": "end_time"
+      }
+    },
+    {
+      "id": "R-LOP-002",
+      "name": "线路操作时间顺序合法",
+      "check_type": "time_order",
+      "applies_to": ["line_operating"],
+      "basis": {
+        "standard": "Q/GDW 1799.2-2013",
+        "clause": "电力线路倒闸操作票时间栏目（操作开始/结束时间先后逻辑）",
+        "quote": "",
+        "channel": "官方条文解读出版物在线阅读页佐证（京东读书）；条文原文未获取",
+        "status": "待核对"
+      },
+      "level": "形式合规",
+      "risk": "一般",
+      "suggestion": "核对操作开始/结束时间填写是否颠倒。",
+      "params": {
+        "mode": "interval",
+        "start": "start_time",
+        "end": "end_time"
+      }
+    },
+    {
+      "id": "R-W1-002",
+      "name": "第一种工作票计划工作时间区间合法",
+      "check_type": "time_order",
+      "applies_to": ["work_first"],
+      "basis": {
+        "standard": "Q/GDW 1799.1-2013",
+        "clause": "计划工作时间/许可开始工作时间/工作终结时间栏目（时间逻辑）",
+        "quote": "",
+        "channel": "官方条文解读出版物在线阅读页佐证（京东读书）；条文原文未获取",
+        "status": "待核对"
+      },
+      "level": "形式合规",
+      "risk": "一般",
+      "suggestion": "核对计划工作时间『自…至…』起止填写是否颠倒。",
+      "params": {
+        "mode": "interval",
+        "start": "plan_start",
+        "end": "plan_end"
+      }
+    },
+    {
+      "id": "R-W2-002",
+      "name": "第二种工作票计划工作时间区间合法",
+      "check_type": "time_order",
+      "applies_to": ["work_second"],
+      "basis": {
+        "standard": "Q/GDW 1799.1-2013",
+        "clause": "计划工作时间/许可开始工作时间/工作终结时间栏目（时间逻辑）",
+        "quote": "",
+        "channel": "官方条文解读出版物在线阅读页佐证（京东读书）；条文原文未获取",
+        "status": "待核对"
+      },
+      "level": "形式合规",
+      "risk": "一般",
+      "suggestion": "核对计划工作时间『自…至…』起止填写是否颠倒。",
+      "params": {
+        "mode": "interval",
+        "start": "plan_start",
+        "end": "plan_end"
+      }
+    },
+    {
+      "id": "R-LW1-002",
+      "name": "线路第一种工作票计划工作时间区间合法",
+      "check_type": "time_order",
+      "applies_to": ["line_work_first"],
+      "basis": {
+        "standard": "Q/GDW 1799.2-2013",
+        "clause": "计划工作时间/许可开始工作时间/工作终结时间栏目（时间逻辑）",
+        "quote": "",
+        "channel": "官方条文解读出版物在线阅读页佐证（京东读书）；条文原文未获取",
+        "status": "待核对"
+      },
+      "level": "形式合规",
+      "risk": "一般",
+      "suggestion": "核对计划工作时间『自…至…』起止填写是否颠倒。",
+      "params": {
+        "mode": "interval",
+        "start": "plan_start",
+        "end": "plan_end"
+      }
+    },
+    {
+      "id": "R-LW2-002",
+      "name": "线路第二种工作票计划工作时间区间合法",
+      "check_type": "time_order",
+      "applies_to": ["line_work_second"],
+      "basis": {
+        "standard": "Q/GDW 1799.2-2013",
+        "clause": "计划工作时间/许可开始工作时间/工作终结时间栏目（时间逻辑）",
+        "quote": "",
+        "channel": "官方条文解读出版物在线阅读页佐证（京东读书）；条文原文未获取",
+        "status": "待核对"
+      },
+      "level": "形式合规",
+      "risk": "一般",
+      "suggestion": "核对计划工作时间『自…至…』起止填写是否颠倒。",
+      "params": {
+        "mode": "interval",
+        "start": "plan_start",
+        "end": "plan_end"
+      }
+    },
+    {
+      "id": "R-W1-004",
+      "name": "第一种工作票许可开始时间应落计划区间",
+      "check_type": "time_order",
+      "applies_to": ["work_first"],
+      "basis": {
+        "standard": "Q/GDW 1799.1-2013",
+        "clause": "计划工作时间/许可开始工作时间/工作终结时间栏目（时间逻辑）",
+        "quote": "",
+        "channel": "官方条文解读出版物在线阅读页佐证（京东读书）；条文原文未获取",
+        "status": "待核对",
+        "note": "许可开始工作时间应在计划工作时间内：先许可后开工"
+      },
+      "level": "形式合规",
+      "risk": "一般",
+      "suggestion": "核对许可开始工作时间是否早于计划开始时间或晚于计划结束时间；许可应在计划工作区间内办理。",
+      "params": {
+        "mode": "in_window",
+        "target": "permit_start",
+        "start": "plan_start",
+        "end": "plan_end"
+      }
+    },
+    {
+      "id": "R-W2-004",
+      "name": "第二种工作票许可开始时间应落计划区间",
+      "check_type": "time_order",
+      "applies_to": ["work_second"],
+      "basis": {
+        "standard": "Q/GDW 1799.1-2013",
+        "clause": "计划工作时间/许可开始工作时间/工作终结时间栏目（时间逻辑）",
+        "quote": "",
+        "channel": "官方条文解读出版物在线阅读页佐证（京东读书）；条文原文未获取",
+        "status": "待核对",
+        "note": "许可开始工作时间应在计划工作时间内：先许可后开工"
+      },
+      "level": "形式合规",
+      "risk": "一般",
+      "suggestion": "核对许可开始工作时间是否早于计划开始时间或晚于计划结束时间；许可应在计划工作区间内办理。",
+      "params": {
+        "mode": "in_window",
+        "target": "permit_start",
+        "start": "plan_start",
+        "end": "plan_end"
+      }
+    },
+    {
+      "id": "R-LW1-004",
+      "name": "线路第一种工作票许可开始时间应落计划区间",
+      "check_type": "time_order",
+      "applies_to": ["line_work_first"],
+      "basis": {
+        "standard": "Q/GDW 1799.2-2013",
+        "clause": "计划工作时间/许可开始工作时间/工作终结时间栏目（时间逻辑）",
+        "quote": "",
+        "channel": "官方条文解读出版物在线阅读页佐证（京东读书）；条文原文未获取",
+        "status": "待核对",
+        "note": "许可开始工作时间应在计划工作时间内：先许可后开工"
+      },
+      "level": "形式合规",
+      "risk": "一般",
+      "suggestion": "核对许可开始工作时间是否早于计划开始时间或晚于计划结束时间；许可应在计划工作区间内办理。",
+      "params": {
+        "mode": "in_window",
+        "target": "permit_start",
+        "start": "plan_start",
+        "end": "plan_end"
+      }
+    },
+    {
+      "id": "R-LW2-004",
+      "name": "线路第二种工作票许可开始时间应落计划区间",
+      "check_type": "time_order",
+      "applies_to": ["line_work_second"],
+      "basis": {
+        "standard": "Q/GDW 1799.2-2013",
+        "clause": "计划工作时间/许可开始工作时间/工作终结时间栏目（时间逻辑）",
+        "quote": "",
+        "channel": "官方条文解读出版物在线阅读页佐证（京东读书）；条文原文未获取",
+        "status": "待核对",
+        "note": "许可开始工作时间应在计划工作时间内：先许可后开工"
+      },
+      "level": "形式合规",
+      "risk": "一般",
+      "suggestion": "核对许可开始工作时间是否早于计划开始时间或晚于计划结束时间；许可应在计划工作区间内办理。",
+      "params": {
+        "mode": "in_window",
+        "target": "permit_start",
+        "start": "plan_start",
+        "end": "plan_end"
+      }
+    },
+    {
+      "id": "R-W1-005",
+      "name": "第一种工作票终结不应早于许可",
+      "check_type": "time_order",
+      "applies_to": ["work_first"],
+      "basis": {
+        "standard": "Q/GDW 1799.1-2013",
+        "clause": "计划工作时间/许可开始工作时间/工作终结时间栏目（时间逻辑）",
+        "quote": "",
+        "channel": "官方条文解读出版物在线阅读页佐证（京东读书）；条文原文未获取",
+        "status": "待核对",
+        "note": "工作终结时间应不早于许可开始工作时间，终结闭环"
+      },
+      "level": "形式合规",
+      "risk": "一般",
+      "suggestion": "核对工作终结时间是否早于许可开始工作时间（终结不得先于许可）。",
+      "params": {
+        "mode": "interval",
+        "start": "permit_start",
+        "end": "end_time"
+      }
+    },
+    {
+      "id": "R-W2-005",
+      "name": "第二种工作票终结不应早于许可",
+      "check_type": "time_order",
+      "applies_to": ["work_second"],
+      "basis": {
+        "standard": "Q/GDW 1799.1-2013",
+        "clause": "计划工作时间/许可开始工作时间/工作终结时间栏目（时间逻辑）",
+        "quote": "",
+        "channel": "官方条文解读出版物在线阅读页佐证（京东读书）；条文原文未获取",
+        "status": "待核对",
+        "note": "工作终结时间应不早于许可开始工作时间，终结闭环"
+      },
+      "level": "形式合规",
+      "risk": "一般",
+      "suggestion": "核对工作终结时间是否早于许可开始工作时间（终结不得先于许可）。",
+      "params": {
+        "mode": "interval",
+        "start": "permit_start",
+        "end": "end_time"
+      }
+    },
+    {
+      "id": "R-LW1-005",
+      "name": "线路第一种工作票终结不应早于许可",
+      "check_type": "time_order",
+      "applies_to": ["line_work_first"],
+      "basis": {
+        "standard": "Q/GDW 1799.2-2013",
+        "clause": "计划工作时间/许可开始工作时间/工作终结时间栏目（时间逻辑）",
+        "quote": "",
+        "channel": "官方条文解读出版物在线阅读页佐证（京东读书）；条文原文未获取",
+        "status": "待核对",
+        "note": "工作终结时间应不早于许可开始工作时间，终结闭环"
+      },
+      "level": "形式合规",
+      "risk": "一般",
+      "suggestion": "核对工作终结时间是否早于许可开始工作时间（终结不得先于许可）。",
+      "params": {
+        "mode": "interval",
+        "start": "permit_start",
+        "end": "end_time"
+      }
+    },
+    {
+      "id": "R-LW2-005",
+      "name": "线路第二种工作票终结不应早于许可",
+      "check_type": "time_order",
+      "applies_to": ["line_work_second"],
+      "basis": {
+        "standard": "Q/GDW 1799.2-2013",
+        "clause": "计划工作时间/许可开始工作时间/工作终结时间栏目（时间逻辑）",
+        "quote": "",
+        "channel": "官方条文解读出版物在线阅读页佐证（京东读书）；条文原文未获取",
+        "status": "待核对",
+        "note": "工作终结时间应不早于许可开始工作时间，终结闭环"
+      },
+      "level": "形式合规",
+      "risk": "一般",
+      "suggestion": "核对工作终结时间是否早于许可开始工作时间（终结不得先于许可）。",
+      "params": {
+        "mode": "interval",
+        "start": "permit_start",
+        "end": "end_time"
+      }
+    },
+    {
+      "id": "R-W1-006",
+      "name": "第一种工作票终结时间不应超出计划区间",
+      "check_type": "time_order",
+      "applies_to": ["work_first"],
+      "basis": {
+        "standard": "Q/GDW 1799.1-2013",
+        "clause": "计划工作时间/许可开始工作时间/工作终结时间栏目（时间逻辑）",
+        "quote": "",
+        "channel": "官方条文解读出版物在线阅读页佐证（京东读书）；条文原文未获取",
+        "status": "待核对",
+        "note": "终结晚于计划结束时间属超期作业，应办延期手续——待人工确认，不硬判"
+      },
+      "level": "形式合规",
+      "risk": "一般",
+      "suggestion": "工作终结时间超出计划工作区间时，应核实是否已办理工作延期手续。",
+      "params": {
+        "mode": "in_window",
+        "target": "end_time",
+        "start": "plan_start",
+        "end": "plan_end",
+        "on_violation": "manual"
+      }
+    },
+    {
+      "id": "R-W2-006",
+      "name": "第二种工作票终结时间不应超出计划区间",
+      "check_type": "time_order",
+      "applies_to": ["work_second"],
+      "basis": {
+        "standard": "Q/GDW 1799.1-2013",
+        "clause": "计划工作时间/许可开始工作时间/工作终结时间栏目（时间逻辑）",
+        "quote": "",
+        "channel": "官方条文解读出版物在线阅读页佐证（京东读书）；条文原文未获取",
+        "status": "待核对",
+        "note": "终结晚于计划结束时间属超期作业，应办延期手续——待人工确认，不硬判"
+      },
+      "level": "形式合规",
+      "risk": "一般",
+      "suggestion": "工作终结时间超出计划工作区间时，应核实是否已办理工作延期手续。",
+      "params": {
+        "mode": "in_window",
+        "target": "end_time",
+        "start": "plan_start",
+        "end": "plan_end",
+        "on_violation": "manual"
+      }
+    },
+    {
+      "id": "R-LW1-006",
+      "name": "线路第一种工作票终结时间不应超出计划区间",
+      "check_type": "time_order",
+      "applies_to": ["line_work_first"],
+      "basis": {
+        "standard": "Q/GDW 1799.2-2013",
+        "clause": "计划工作时间/许可开始工作时间/工作终结时间栏目（时间逻辑）",
+        "quote": "",
+        "channel": "官方条文解读出版物在线阅读页佐证（京东读书）；条文原文未获取",
+        "status": "待核对",
+        "note": "终结晚于计划结束时间属超期作业，应办延期手续——待人工确认，不硬判"
+      },
+      "level": "形式合规",
+      "risk": "一般",
+      "suggestion": "工作终结时间超出计划工作区间时，应核实是否已办理工作延期手续。",
+      "params": {
+        "mode": "in_window",
+        "target": "end_time",
+        "start": "plan_start",
+        "end": "plan_end",
+        "on_violation": "manual"
+      }
+    },
+    {
+      "id": "R-LW2-006",
+      "name": "线路第二种工作票终结时间不应超出计划区间",
+      "check_type": "time_order",
+      "applies_to": ["line_work_second"],
+      "basis": {
+        "standard": "Q/GDW 1799.2-2013",
+        "clause": "计划工作时间/许可开始工作时间/工作终结时间栏目（时间逻辑）",
+        "quote": "",
+        "channel": "官方条文解读出版物在线阅读页佐证（京东读书）；条文原文未获取",
+        "status": "待核对",
+        "note": "终结晚于计划结束时间属超期作业，应办延期手续——待人工确认，不硬判"
+      },
+      "level": "形式合规",
+      "risk": "一般",
+      "suggestion": "工作终结时间超出计划工作区间时，应核实是否已办理工作延期手续。",
+      "params": {
+        "mode": "in_window",
+        "target": "end_time",
+        "start": "plan_start",
+        "end": "plan_end",
+        "on_violation": "manual"
+      }
+    },
+    {
+      "id": "R-ER-002",
+      "name": "抢修时间顺序合法",
+      "check_type": "time_order",
+      "applies_to": ["emergency_repair"],
+      "basis": {
+        "standard": "Q/GDW 1799.1-2013",
+        "clause": "抢修单时间栏目（抢修开始/结束时间先后逻辑）",
+        "quote": "",
+        "channel": "官方条文解读出版物在线阅读页佐证（京东读书）；条文原文未获取",
+        "status": "待核对"
+      },
+      "level": "形式合规",
+      "risk": "一般",
+      "suggestion": "核对抢修开始/结束时间填写是否颠倒。",
+      "params": {
+        "mode": "interval",
+        "start": "start_time",
+        "end": "end_time"
+      }
+    }
+  ]
+}

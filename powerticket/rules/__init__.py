@@ -1,4 +1,7 @@
-"""规则引擎：加载规则 JSON → 票种类目门控 → check_type 分派（schema 见 plan/04 §3）。"""
+"""规则引擎：加载规则 JSON → 票种类目门控 → check_type 分派（schema 见 plan/04 §3）。
+
+M3 起全 7 类 check_type 分派；正式规则库分文件放 data/knowledge/rules/。
+"""
 from __future__ import annotations
 
 import json
@@ -14,6 +17,11 @@ DEFAULT_RULES_PATH = _REPO_ROOT / "data" / "knowledge" / "rules"
 CHECKS: Dict[str, Any] = {
     "required_field": checks.check_required_field,
     "time_order": checks.check_time_order,
+    "process_signature": checks.check_process_signature,
+    "ticket_type_match": checks.check_ticket_type_match,
+    "measure_coverage": checks.check_measure_coverage,
+    "five_prevention": checks.check_five_prevention,
+    "consistency": checks.check_consistency,
 }
 
 _REQUIRED_KEYS = ("id", "name", "check_type", "applies_to", "basis")

@@ -1,4 +1,7 @@
-"""M1 数据先行守门：模板完整性 / 生成器确定性（位级一致）/ 真值语义 / 互斥矩阵 / operating 回归对账。"""
+"""M1 数据先行守门：模板完整性 / 生成器确定性（位级一致）/ 真值语义 / 互斥矩阵 / 35 份样例解析对账。
+
+M3 起规则引擎全 check_type，缺陷样例对账升级为全集精确对账（非 pass 集合 == expect ∪ also_expect）。
+"""
 from __future__ import annotations
 
 import importlib.util
@@ -222,8 +225,6 @@ def test_no_mutual_exclusion_violations_in_committed():
 EXTRACTED_BUT_UNTRUTHED = {"remarks"}
 # 注入缺失=字段留空并从真值 fields 移除的两类缺陷
 BLANKING_DEFECTS = ("missing_field", "signature_gap")
-# 当前规则库 check_type 覆盖面（M3 扩展后由 M4 基准接管全集对账）
-COVERED_CHECK_TYPES = {"required_field", "time_order"}
 
 
 def _truth_payloads():
@@ -235,21 +236,14 @@ def _blanked(tr):
     return {d["target"] for d in tr["defects"] if d["defect_type"] in BLANKING_DEFECTS}
 
 
-def _covered_expected(tr):
-    """当前已实现规则语义能推出的期望子集：time_order 期望仅在倒挂注入或缺时间字段时算已覆盖
-    （permit_time_out_of_range 的区间校核规则属 M3 扩展）。"""
-    expected = set(tr["expect"]) | set(tr["also_expect"])
-    covered = set(expected & COVERED_CHECK_TYPES)
-    if "time_order" in covered:
-        dts = {d["defect_type"] for d in tr["defects"]}
-        if not dts & {"time_order", "missing_field"}:
-            covered.discard("time_order")
-    return covered
+def _expected(tr):
+    """真值期望全集：expect ∪ also_expect（M1 真值语义，既定口径）。"""
+    return set(tr["expect"]) | set(tr["also_expect"])
 
 
 TRUTHS = list(_truth_payloads())
 NORMAL_TRUTHS = [(p, tr) for p, tr in TRUTHS if tr["kind"] == "normal"]
-COVERED_EXPECTATION_TRUTHS = [(p, tr) for p, tr in TRUTHS if _covered_expected(tr)]
+DEFECT_TRUTHS = [(p, tr) for p, tr in TRUTHS if tr["kind"] == "defect"]
 
 
 @pytest.mark.parametrize("truth_path,payload", TRUTHS, ids=[p.stem for p, _ in TRUTHS])
@@ -301,17 +295,23 @@ def test_generated_normal_sample_no_false_alarm(truth_path, payload):
 
 
 @pytest.mark.parametrize(
-    "truth_path,payload",
-    COVERED_EXPECTATION_TRUTHS,
-    ids=[p.stem for p, _ in COVERED_EXPECTATION_TRUTHS],
+    "truth_path,payload", DEFECT_TRUTHS, ids=[p.stem for p, _ in DEFECT_TRUTHS]
 )
-def test_generated_sample_covered_expectations_fire(truth_path, payload):
-    """已实现规则语义覆盖的期望（required_field/time_order）必须在缺陷样例上非 pass。"""
+def test_generated_sample_expected_conclusions_fire(truth_path, payload):
+    """M3 全集对账：8 缺陷类型全部有可触发规则后，缺陷样例的非 pass 集合必须与期望全集
+    （expect ∪ also_expect）精确相等——多出即归因双计、缺少即漏检；
+    正常样例零误报由 test_generated_normal_sample_no_false_alarm 锁定（M4 基准同口径）。"""
     from powerticket.rules import load_rules, run_checks
 
     tr = payload
     card = parse_ticket((GEN_OUT / tr["file"]).read_text(encoding="utf-8"))
     rules = load_rules()
     rule_types = {r["id"]: r["check_type"] for r in rules}
-    non_pass = {rule_types[c.rule_id] for c in run_checks(card, rules) if c.verdict != "合规"}
-    assert _covered_expected(tr) <= non_pass, (tr["file"], non_pass)
+    non_pass = {
+        rule_types[c.rule_id] for c in run_checks(card, rules) if c.verdict != "合规"
+    }
+    assert non_pass == _expected(tr), (
+        tr["file"],
+        sorted(non_pass),
+        sorted(_expected(tr)),
+    )
