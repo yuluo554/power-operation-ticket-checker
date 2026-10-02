@@ -57,11 +57,58 @@ def test_parse_garbage_friendly(capsys):
 
 
 def test_stub_commands_exit_2(capsys):
-    for cmd in (["run"], ["report", str(SAMPLE)], ["web"], ["benchmark"]):
+    for cmd in (["run"], ["report", str(SAMPLE)], ["web"]):
         rc = cli.main(cmd)
         captured = capsys.readouterr()
         assert rc == 2, cmd
         assert "尚未实现" in captured.out
+
+
+def test_benchmark_runs_and_passes_gates(capsys):
+    rc = cli.main(["benchmark"])
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "[parse_f1]" in out and "[endtoend]" in out
+    assert "F1 1.0" in out
+    assert "误报率 0.0" in out
+    assert "全部通过" in out
+
+
+def test_benchmark_json_output(capsys):
+    rc = cli.main(["benchmark", "--json"])
+    out = capsys.readouterr().out
+    assert rc == 0
+    payload = json.loads(out)
+    assert payload["parse_f1"]["gate"]["pass"] is True
+    assert payload["endtoend"]["gate"]["pass"] is True
+
+
+def test_parse_llm_fallback_degrades_to_rule_path(monkeypatch, capsys):
+    """--llm-fallback 在 LLM 断供（无密钥）时降级纯规则通路：可解析样例照常出卡。"""
+    import powerticket.llm.client as client_mod
+
+    monkeypatch.setattr(client_mod, "resolve_api_key", lambda *a, **k: None)
+    rc = cli.main(["parse", str(SAMPLE), "--llm-fallback"])
+    out = capsys.readouterr().out
+    assert rc == 0
+    card = json.loads(out)
+    assert card["ticket_type"] == "operating"  # 纯规则通路结果
+
+
+def test_check_llm_fallback_unparseable_degrades_with_trace(monkeypatch, capsys):
+    """不可解析文本 + --llm-fallback 断供 → 友好报错并注明已降级。"""
+    import powerticket.llm.client as client_mod
+
+    monkeypatch.setattr(client_mod, "resolve_api_key", lambda *a, **k: None)
+    bad = ROOT / "output_garbage.tmp.txt"
+    bad.write_text("无关文本", encoding="utf-8")
+    try:
+        rc = cli.main(["check", str(bad), "--llm-fallback"])
+    finally:
+        bad.unlink(missing_ok=True)
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert "降级" in captured.err
 
 
 def test_cli_help_lists_all_subcommands(capsys):

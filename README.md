@@ -2,7 +2,7 @@
 
 电力"两票"（工作票/操作票）智能审核与合规校核系统 —— **规则优先 · 依据挂链 · 基准可复现**。
 
-> 状态：🚧 **解析层完成（v0.1.0，M2）**。计划文档齐全（[plan/](plan/00-README总览.md)），7 票种全部解析为参数卡并经 35 份带真值样例逐项对账；规则库、基准、报告/Web 按里程碑推进。
+> 状态：🚧 **M4 完成（规则引擎全量 + 内置基准 + LLM 兜底，2026-10-02）**。7 票种全部解析为参数卡并经 35 份带真值样例全集精确对账；39 条规则全 7 类 check_type、依据挂链知识库三层；基准 F1 1.0 / 误报 0；报告/Web 按里程碑推进。
 
 ## 这是什么
 
@@ -37,7 +37,8 @@ flowchart LR
 # Windows（开发环境实测）
 py -X utf8 -m powerticket demo          # 内置样例端到端：解析 → 校核 → 控制台报告
 py -X utf8 -m powerticket check data/samples/sample-operating-01.txt   # 参数卡+结论 JSON
-py -X utf8 -m pytest                    # 测试（98 项，全离线）
+py -X utf8 -m powerticket benchmark     # 内置基准：解析 F1 / 检出率 / 误报率（零 API 依赖）
+py -X utf8 -m pytest                    # 测试（174 项，全离线）
 
 # 重新生成内置带真值评测集（固定 seed 位级一致，详见 data/generator/README.md）
 py -X utf8 data/generator/generate.py --force
@@ -50,7 +51,7 @@ py -m pip install -e ".[dev]"
 powerticket --help
 ```
 
-当前实现范围：**7 票种全部解析**（操作票含发令人与操作序列，工作票含计划时间双拆/许可/终结/签发/许可人与安全措施条目，抢修单含许可人与安全措施条目）+ 14 条演示规则（7 票种 × 必填项/时间顺序，类目门控）；缺陷注入生成器与 35 份带真值配对评测集（`data/samples/gen/`）就绪并逐项回归对账。`report`/`web`/`benchmark` 子命令已就位，调用时提示计划里程碑（M5/M4）。
+当前实现范围：**7 票种全部解析**（操作票含发令人与操作序列，工作票含计划时间双拆/许可/终结/签发/许可人与安全措施条目，抢修单含许可人与安全措施条目）+ **39 条正式规则全 7 类 check_type**（required_field / time_order / process_signature / ticket_type_match / measure_coverage / five_prevention / consistency，依据挂链知识库三层：官方 PDF/登记卡 → 条文块 → 规则库）+ **内置基准**（35 份带真值样例，字段级 F1 与端到端检出/误报，零 API 可复现）+ **LLM 兜底抽取**（可选，DashScope qwen，断供自动降级纯规则通路）。`report`/`web` 子命令已就位，调用时提示计划里程碑（M5）。
 
 ## 路线图
 
@@ -59,19 +60,50 @@ powerticket --help
 | M0 | 计划文档（plan/00–06）+ 可运行骨架 | ✅ |
 | M1 | 数据先行：生成器（固定 seed/植入缺陷/真值）+ 7 票种模板 + 35 份配对评测集 | ✅ |
 | M2 | 解析层：7 票种 → 参数卡，回归测试 | ✅ |
-| M3 | 规范知识库三层 + 规则引擎全量（类目门控、依据关联） | ⬜ |
-| M4 | LLM 兜底（防幻觉三件套）+ 内置基准 | ⬜ |
+| M3 | 规范知识库三层 + 规则引擎全量（类目门控、依据关联） | ✅ |
+| M4 | LLM 兜底（防幻觉三件套）+ 内置基准 | ✅ |
 | M5 | CLI run + docx 报告 + Web 面板（0 外链） | ⬜ |
 | M6 | 干净环境验证 + 脱敏发布 GitHub | ⬜ |
 
-## 内置基准（M4 提供）
+## 内置基准（M4 达成）
 
-设计门槛：票面解析字段级 **F1 ≥ 0.95**、植入缺陷检出最大化且**误报 0**、基准**零 API 依赖**可重复。指标达成后回填：
+设计门槛：票面解析字段级 **F1 ≥ 0.95**、植入缺陷检出最大化且**误报 0**、基准**零 API 依赖**可重复。实测（`data/samples/gen` 35 份带真值样例，seed=20261002，2026-10-02）：
 
 | 指标 | 结果 |
 |---|---|
-| 解析 F1 | 未达成（M4） |
-| 端到端检出率 / 误报率 | 未达成（M4） |
+| 解析字段级 P / R / F1 | 1.0 / 1.0 / **1.0**（463 个评测项：0 误报 0 漏报） |
+| 缺陷检出率 | **1.0**（28/28 缺陷样例，非 pass 集合 == expect∪also_expect 精确对账） |
+| 误报率 | **0**（7 份正常样例零非 pass 结论，28 份缺陷样例零多出结论） |
+| 判定准确率 | **1.0**（35/35） |
+
+运行方式（零 API 依赖，固定 seed 数据集位级可复现；门槛未过退出码 1）：
+
+```bash
+py -X utf8 -m powerticket benchmark             # 人读报表 + 门槛判定
+py -X utf8 -m powerticket benchmark --json      # 机器可读 JSON
+py -X utf8 -m powerticket.eval.parse_f1         # 单跑解析 F1
+py -X utf8 -m powerticket.eval.endtoend         # 单跑端到端检出/误报
+```
+
+口径（M4 定稿，与 tests/test_data_generator.py 一致）：字段级按 `truth.fields` 逐键对账（remarks 是唯一不入真值的已抽取字段，不计分），操作序列/安全措施按位对账；端到端按 M3 全集精确对账——非 pass 结论的 check_type 集合 == expect∪also_expect。脚本接口：`powerticket.eval.parse_f1.run(samples_dir=None)`、`powerticket.eval.endtoend.run(samples_dir=None, rules_path=None)`。
+
+## LLM 兜底抽取（M4，可选）
+
+纪律：**数值结论永远来自确定性规则**。LLM 仅在规则解析失败或字段低置信度时兜底抽取，与规则解析同一参数卡出口（TicketCard），全链路 warnings 留痕：
+
+- **缺失字段不兜底**：字段缺失本身是合规信号（required_field 判定），兜底填充会掩盖缺陷；
+- **摘录逐字回验**：LLM 字段/条目必须携带原文逐字摘录，否则该项不入卡（防幻觉）；
+- **断供降级**：未装依赖 / 未配密钥 / 网络断 / 坏响应一律降级纯规则通路，行为与不开启兜底完全一致（测试锁定）。
+
+启用（供应商：DashScope qwen，openai 兼容模式，`enable_thinking=false`，决策 D-2；依赖仅入 extras）：
+
+```bash
+py -m pip install -e ".[llm]"
+echo DASHSCOPE_API_KEY=sk-xxx > .env        # 密钥不入仓（.gitignore 已排除）
+py -X utf8 -m powerticket check <票据>.txt --llm-fallback
+```
+
+模型/接入点/超时可用环境变量覆盖：`POWERTICKET_LLM_MODEL`（默认 qwen-plus）、`POWERTICKET_LLM_BASE_URL`、`POWERTICKET_LLM_TIMEOUT`（默认 30 秒）。
 
 ## 依赖分层
 

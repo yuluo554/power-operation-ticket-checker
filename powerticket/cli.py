@@ -10,7 +10,8 @@ import sys
 from pathlib import Path
 
 from . import __version__
-from .parse import ParseError, parse_ticket
+from .llm.fallback import parse_ticket_with_fallback
+from .parse import ParseError
 from .pipeline import run_pipeline
 from .rules import RuleError
 
@@ -67,7 +68,9 @@ def _cmd_demo(args) -> int:
 
 def _cmd_parse(args) -> int:
     try:
-        card = parse_ticket(_read_ticket(args.file))
+        card = parse_ticket_with_fallback(
+            _read_ticket(args.file), allow_llm=args.llm_fallback
+        )
     except ParseError as e:
         print(f"解析失败: {e}", file=sys.stderr)
         return 2
@@ -77,12 +80,42 @@ def _cmd_parse(args) -> int:
 
 def _cmd_check(args) -> int:
     try:
-        result = run_pipeline(_read_ticket(args.file))
+        result = run_pipeline(_read_ticket(args.file), allow_llm_fallback=args.llm_fallback)
     except (ParseError, RuleError) as e:
         print(f"校核失败: {e}", file=sys.stderr)
         return 2
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0
+
+
+def _cmd_benchmark(args) -> int:
+    from .eval.endtoend import run as run_endtoend
+    from .eval.parse_f1 import run as run_parse_f1
+
+    parse_result = run_parse_f1()
+    e2e_result = run_endtoend()
+    if args.json:
+        # --json 输出纯净 JSON（机器可读），不带额外文案
+        print(json.dumps({"parse_f1": parse_result, "endtoend": e2e_result}, ensure_ascii=False, indent=2))
+        return 0 if parse_result["gate"]["pass"] and e2e_result["gate"]["pass"] else 1
+    print(f"== 内置基准（{parse_result['samples']} 份样例，零 API 依赖）==")
+    items = parse_result["items"]
+    print(
+        f"[parse_f1] 字段级：TP {items['tp']} / FP {items['fp']} / FN {items['fn']}"
+        f" ｜ P {parse_result['precision']} R {parse_result['recall']} F1 {parse_result['f1']}"
+        f"（门槛 ≥{parse_result['gate']['f1_min']}）"
+    )
+    det, acc = e2e_result["detection"], e2e_result["accuracy"]
+    print(
+        f"[endtoend] 检出率 {det['rate']}（{det['hit']}/{det['total']} 缺陷样例）"
+        f" ｜ 误报率 {e2e_result['false_positive_rate']}（{e2e_result['false_positive_samples']} 份）"
+        f" ｜ 判定准确率 {acc['rate']}（{acc['correct']}/{acc['total']}）"
+    )
+    for failure in e2e_result["failures"]:
+        print(f"  [未命中] {failure['file']}（{failure['kind']}）漏检={failure['miss']} 误报={failure['extra']}")
+    gates_ok = parse_result["gate"]["pass"] and e2e_result["gate"]["pass"]
+    print(f"基准门槛（F1≥0.95、误报 0）：{'全部通过' if gates_ok else '未通过'}")
+    return 0 if gates_ok else 1
 
 
 def _not_implemented(title: str, milestone: str, hint: str = ""):
@@ -106,17 +139,30 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = sub.add_parser("parse", help="票据文本 → 票面参数卡 JSON")
     p.add_argument("file", help="票据文本文件路径")
+    p.add_argument(
+        "--llm-fallback",
+        action="store_true",
+        help="规则解析失败时尝试 LLM 兜底（需安装 .[llm] 并配置 DASHSCOPE_API_KEY；不可用自动降级纯规则通路）",
+    )
     p.set_defaults(func=_cmd_parse)
 
     p = sub.add_parser("check", help="票据文本 → 参数卡+校核结论 JSON")
     p.add_argument("file", help="票据文本文件路径")
+    p.add_argument(
+        "--llm-fallback",
+        action="store_true",
+        help="规则解析失败时尝试 LLM 兜底（需安装 .[llm] 并配置 DASHSCOPE_API_KEY；不可用自动降级纯规则通路）",
+    )
     p.set_defaults(func=_cmd_check)
+
+    p = sub.add_parser("benchmark", help="内置基准评测（解析 F1 / 检出率 / 误报率 / 判定准确率）")
+    p.add_argument("--json", action="store_true", help="以 JSON 输出原始指标")
+    p.set_defaults(func=_cmd_benchmark)
 
     for cmd, title, ms, hint, with_file in (
         ("run", "多票端到端与目录模式", "M5", "先用 demo/parse/check 体验骨架能力。", True),
         ("report", "docx 报告导出", "M5", "", True),
         ("web", "Web 审核面板", "M5", "", False),
-        ("benchmark", "内置基准评测（解析 F1 / 检出率 / 误报率）", "M4", "", False),
     ):
         p = sub.add_parser(cmd, help=f"{title}（{ms} 提供）")
         if with_file:
