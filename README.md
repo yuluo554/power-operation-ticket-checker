@@ -2,7 +2,7 @@
 
 电力"两票"（工作票/操作票）智能审核与合规校核系统 —— **规则优先 · 依据挂链 · 基准可复现**。
 
-> 状态：🚧 **骨架阶段（v0.1.0，M0）**。计划文档齐全（[plan/](plan/00-README总览.md)），端到端骨架可运行；7 票种解析、规则库、基准、报告/Web 按里程碑推进。
+> 状态：🚧 **数据先行完成（v0.1.0，M1）**。计划文档齐全（[plan/](plan/00-README总览.md)），端到端骨架可运行，带真值配对评测集就绪；7 票种解析、规则库、基准、报告/Web 按里程碑推进。
 
 ## 这是什么
 
@@ -37,7 +37,10 @@ flowchart LR
 # Windows（开发环境实测）
 py -X utf8 -m powerticket demo          # 内置样例端到端：解析 → 校核 → 控制台报告
 py -X utf8 -m powerticket check data/samples/sample-operating-01.txt   # 参数卡+结论 JSON
-py -X utf8 -m pytest                    # 测试（24 项，全离线）
+py -X utf8 -m pytest                    # 测试（39 项，全离线）
+
+# 重新生成内置带真值评测集（固定 seed 位级一致，详见 data/generator/README.md）
+py -X utf8 data/generator/generate.py --force
 
 # Linux / macOS
 python3 -X utf8 -m powerticket demo
@@ -47,14 +50,14 @@ py -m pip install -e ".[dev]"
 powerticket --help
 ```
 
-当前骨架实现范围：变电站倒闸操作票 demo 解析 + 2 条演示规则（必填项/时间顺序）+ 类目门控引擎通路。`report`/`web`/`benchmark` 子命令已就位，调用时提示计划里程碑（M5/M4）。
+当前骨架实现范围：变电站倒闸操作票 demo 解析 + 2 条演示规则（必填项/时间顺序）+ 类目门控引擎通路；7 票种票样模板、缺陷注入生成器与 35 份带真值配对评测集（`data/samples/gen/`）已就绪。其余 6 票种解析在 M2 接入；`report`/`web`/`benchmark` 子命令已就位，调用时提示计划里程碑（M5/M4）。
 
 ## 路线图
 
 | 里程碑 | 内容 | 状态 |
 |---|---|---|
 | M0 | 计划文档（plan/00–06）+ 可运行骨架 | ✅ |
-| M1 | 数据先行：生成器（固定 seed/植入缺陷/真值）+ 7 票种模板 | ⬜ |
+| M1 | 数据先行：生成器（固定 seed/植入缺陷/真值）+ 7 票种模板 + 35 份配对评测集 | ✅ |
 | M2 | 解析层：7 票种 → 参数卡，回归测试 | ⬜ |
 | M3 | 规范知识库三层 + 规则引擎全量（类目门控、依据关联） | ⬜ |
 | M4 | LLM 兜底（防幻觉三件套）+ 内置基准 | ⬜ |

@@ -1,0 +1,42 @@
+{
+  "schema": "powerticket-truth/0.1",
+  "file": "gen-line_operating-012-combo-missing-task-five-prevention.txt",
+  "generator": "data/generator/generate.py",
+  "seed": 20261002,
+  "ticket_type": "line_operating",
+  "kind": "defect",
+  "defects": [
+    {
+      "defect_type": "missing_field",
+      "target": "task"
+    },
+    {
+      "defect_type": "five_prevention_violation",
+      "target": "steps"
+    }
+  ],
+  "expect": [
+    "required_field",
+    "five_prevention"
+  ],
+  "also_expect": [],
+  "fields": {
+    "ticket_no": "XZ-2026-0012",
+    "start_time": "2026-10-24T08:30",
+    "end_time": "2026-10-24T09:40",
+    "dispatcher": "张测试",
+    "guardian": "李演示",
+    "operator": "孙占位"
+  },
+  "operation_sequence": [
+    {
+      "no": 1,
+      "action": "检查110kV东湖线31号杆分段断路器确在合闸位置"
+    },
+    {
+      "no": 2,
+      "action": "拉开110kV东湖线33号杆003隔离开关"
+    }
+  ],
+  "semantics_note": "expect/also_expect 为 check_type 粒度主期望/隐含结论，评测按『文档全部非 pass 集合』对账；fields（时间 ISO）与 operation_sequence/safety_measures 为解析真值，被注入缺失的字段不出现在 fields，时间倒挂时照实登记票面所见值；备注栏为虚构声明，不入真值。"
+}

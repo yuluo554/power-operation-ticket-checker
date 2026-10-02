@@ -1,5 +1,7 @@
 # HANDOFF-M1（M0 收尾交接快照）
 
+> **已过时仅作历史**（M1 已于 2026-10-02 完成，续接请读 [HANDOFF-M2.md](HANDOFF-M2.md)）。
+>
 > 写于 2026-10-02，M0（计划+骨架）收尾。下一里程碑：M1 数据先行。新对话续接提示词：
 > `/goal 读取 "D:\ProgramData\zcode\power-operation-ticket-checker\plan\HANDOFF-M1.md" 继续完成任务`
 

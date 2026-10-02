@@ -5,13 +5,14 @@ import re
 
 from ..models import Evidence, FieldValue, OperationStep, TicketCard
 
+# 字段值限定单行（[ \t]* 而非 \s*）：\s 会吃掉换行，空值字段会把下一行内容误抽为本字段值
 _FIELD_PATTERNS = {
-    "ticket_no": re.compile(r"编号[：:]\s*(\S+)"),
-    "task": re.compile(r"操作任务[：:]\s*(.+)"),
-    "start_time": re.compile(r"开始时间[：:]\s*(.+)"),
-    "end_time": re.compile(r"结束时间[：:]\s*(.+)"),
-    "guardian": re.compile(r"监护人[：:]\s*(\S+)"),
-    "operator": re.compile(r"操作人[：:]\s*(\S+)"),
+    "ticket_no": re.compile(r"编号[：:][ \t]*(\S+)"),
+    "task": re.compile(r"操作任务[：:][ \t]*(.+)"),
+    "start_time": re.compile(r"开始时间[：:][ \t]*(.+)"),
+    "end_time": re.compile(r"结束时间[：:][ \t]*(.+)"),
+    "guardian": re.compile(r"监护人[：:][ \t]*(\S+)"),
+    "operator": re.compile(r"操作人[：:][ \t]*(\S+)"),
 }
 _STEP_PATTERN = re.compile(r"^\s*(\d{1,3})[\s．.、]\s*(\S.*)$")
 _TIME_PATTERN = re.compile(r"(\d{4})年(\d{1,2})月(\d{1,2})日\s*(\d{1,2}):(\d{2})")

@@ -1,0 +1,18 @@
+变电站（发电厂）第二种工作票
+编号：{{ticket_no}}
+工作单位：{{work_unit}}
+工作负责人：{{work_head}}
+工作班成员：{{crew}}
+工作地点及设备双重名称：{{location}}
+工作任务：{{task}}
+计划工作时间：自{{plan_start}} 至{{plan_end}}
+
+安全措施（下列由工作票签发人填写）：
+{{measures}}
+
+工作票签发人：{{issuer}}
+许可开始工作时间：{{permit_start}}
+工作许可人：{{permitor}}
+工作终结时间：{{end_time}}
+
+备注：{{remarks}}

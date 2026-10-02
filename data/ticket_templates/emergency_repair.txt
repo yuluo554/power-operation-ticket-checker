@@ -1,0 +1,15 @@
+事故紧急抢修单
+编号：{{ticket_no}}
+抢修单位：{{work_unit}}
+抢修任务（设备双重名称及故障简况）：{{task}}
+
+安全措施：
+{{measures}}
+
+抢修开始时间：{{start_time}}
+抢修结束时间：{{end_time}}
+工作负责人：{{work_head}}
+工作班成员：{{crew}}
+许可人（值班负责人）：{{permitor}}
+
+备注：{{remarks}}

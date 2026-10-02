@@ -1,0 +1,32 @@
+{
+  "schema": "powerticket-truth/0.1",
+  "file": "gen-line_work_first-024-normal.txt",
+  "generator": "data/generator/generate.py",
+  "seed": 20261002,
+  "ticket_type": "line_work_first",
+  "kind": "normal",
+  "defects": [],
+  "expect": [],
+  "also_expect": [],
+  "fields": {
+    "ticket_no": "XL1-2026-0024",
+    "work_unit": "变电检修一班",
+    "work_head": "张测试",
+    "crew": "周样例、李演示、王模拟",
+    "location": "110kV东湖线31号-33号杆区段",
+    "task": "更换110kV东湖线31号杆绝缘子（需停电）",
+    "plan_start": "2026-10-21T08:00",
+    "plan_end": "2026-10-21T17:00",
+    "issuer": "钱示例",
+    "permit_start": "2026-10-21T08:10",
+    "permitor": "周样例",
+    "end_time": "2026-10-21T16:50"
+  },
+  "safety_measures": [
+    "断开110kV东湖线发电厂、变电站侧断路器和两侧隔离开关",
+    "在110kV东湖线31号-33号杆区段两端验电确无电压",
+    "在110kV东湖线31号-33号杆区段两端各装设接地线一组",
+    "悬挂“禁止合闸，线路有人工作！”标示牌"
+  ],
+  "semantics_note": "expect/also_expect 为 check_type 粒度主期望/隐含结论，评测按『文档全部非 pass 集合』对账；fields（时间 ISO）与 operation_sequence/safety_measures 为解析真值，被注入缺失的字段不出现在 fields，时间倒挂时照实登记票面所见值；备注栏为虚构声明，不入真值。"
+}

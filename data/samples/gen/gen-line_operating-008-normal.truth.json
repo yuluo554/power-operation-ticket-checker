@@ -1,0 +1,43 @@
+{
+  "schema": "powerticket-truth/0.1",
+  "file": "gen-line_operating-008-normal.txt",
+  "generator": "data/generator/generate.py",
+  "seed": 20261002,
+  "ticket_type": "line_operating",
+  "kind": "normal",
+  "defects": [],
+  "expect": [],
+  "also_expect": [],
+  "fields": {
+    "ticket_no": "XZ-2026-0008",
+    "task": "将220kV西江线7号-9号杆区段由运行转为检修",
+    "start_time": "2026-10-20T08:30",
+    "end_time": "2026-10-20T09:40",
+    "dispatcher": "赵演练",
+    "guardian": "李演示",
+    "operator": "周样例"
+  },
+  "operation_sequence": [
+    {
+      "no": 1,
+      "action": "断开220kV西江线7号杆分段断路器"
+    },
+    {
+      "no": 2,
+      "action": "检查220kV西江线7号杆分段断路器确在断开位置"
+    },
+    {
+      "no": 3,
+      "action": "拉开220kV西江线9号杆007隔离开关"
+    },
+    {
+      "no": 4,
+      "action": "检查220kV西江线9号杆007隔离开关确在拉开位置"
+    },
+    {
+      "no": 5,
+      "action": "在220kV西江线7号-9号杆区段两侧验电确无电压并各装设接地线一组"
+    }
+  ],
+  "semantics_note": "expect/also_expect 为 check_type 粒度主期望/隐含结论，评测按『文档全部非 pass 集合』对账；fields（时间 ISO）与 operation_sequence/safety_measures 为解析真值，被注入缺失的字段不出现在 fields，时间倒挂时照实登记票面所见值；备注栏为虚构声明，不入真值。"
+}

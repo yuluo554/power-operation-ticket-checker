@@ -1,0 +1,13 @@
+变电站倒闸操作票
+编号：{{ticket_no}}
+操作任务：{{task}}
+操作开始时间：{{start_time}}
+操作结束时间：{{end_time}}
+发令人：{{dispatcher}}
+监护人：{{guardian}}
+操作人：{{operator}}
+
+顺序  操作项目
+{{steps}}
+
+备注：{{remarks}}

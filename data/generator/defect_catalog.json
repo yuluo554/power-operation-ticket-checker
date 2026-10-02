@@ -1,0 +1,153 @@
+{
+  "schema": "powerticket-defect-catalog/0.1",
+  "note": "缺陷类型与 check_type 对齐清单 + 互斥注入矩阵 + 多值封顶参数（plan/05 §2 的机器可读版）。真值 expect/also_expect 以 check_type 粒度表达，评测（M4）按『文档全部非 pass 集合』对账。",
+  "check_type_set": [
+    "required_field",
+    "time_order",
+    "process_signature",
+    "ticket_type_match",
+    "measure_coverage",
+    "five_prevention",
+    "consistency"
+  ],
+  "check_type_status": {
+    "required_field": "M0 已实现",
+    "time_order": "M0 已实现（开始<结束）；许可落区间为 M3 扩展",
+    "process_signature": "规则 M3 实现",
+    "ticket_type_match": "规则 M3 实现",
+    "measure_coverage": "规则 M3 实现",
+    "five_prevention": "规则 M3 实现",
+    "consistency": "规则 M3 实现"
+  },
+  "also_expect_policy": "also_expect 只登记『由本仓已声明规则语义强制推出』的隐含结论（当前唯一来源：missing_field 注入时间字段 → time_order 因字段缺失判待人工确认=非 pass，M0 已实现）；不对未实现的 M3 规则行为做猜测。",
+  "defect_types": [
+    {
+      "defect_type": "missing_field",
+      "check_type": "required_field",
+      "desc": "必填字段留空：渲染保留『标签：』空值行，标签仍在、值为空",
+      "expect": ["required_field"],
+      "also_expect_rule": "target ∈ {start_time, end_time, plan_start, plan_end} → also_expect=[time_order]",
+      "targets": {
+        "operating": ["ticket_no", "task", "start_time", "end_time", "guardian", "operator"],
+        "line_operating": ["ticket_no", "task", "start_time", "end_time", "guardian", "operator"],
+        "work_first": ["task", "plan_start", "plan_end", "crew", "location"],
+        "work_second": ["crew", "location", "task"],
+        "line_work_first": ["location", "task", "crew"],
+        "line_work_second": ["task", "crew"],
+        "emergency_repair": ["task", "start_time", "end_time", "crew"]
+      }
+    },
+    {
+      "defect_type": "time_order",
+      "check_type": "time_order",
+      "desc": "开始/结束时间倒挂：交换起止时间后照实打印（解析真值=票面所见值）",
+      "expect": ["time_order"],
+      "targets": {
+        "operating": ["start_time", "end_time"],
+        "line_operating": ["start_time", "end_time"],
+        "work_first": ["plan_start", "plan_end"],
+        "work_second": ["plan_start", "plan_end"],
+        "line_work_first": ["plan_start", "plan_end"],
+        "line_work_second": ["plan_start", "plan_end"],
+        "emergency_repair": ["start_time", "end_time"]
+      }
+    },
+    {
+      "defect_type": "permit_time_out_of_range",
+      "check_type": "time_order",
+      "desc": "许可开始工作时间落在计划工作区间之外（早于计划开始或晚于计划结束）",
+      "expect": ["time_order"],
+      "targets": {
+        "work_first": ["permit_start"],
+        "work_second": ["permit_start"],
+        "line_work_first": ["permit_start"],
+        "line_work_second": ["permit_start"]
+      },
+      "note": "区间校核规则随 M3 time_order 扩展实现；与 time_order 同 check_type，期望集去重"
+    },
+    {
+      "defect_type": "signature_gap",
+      "check_type": "process_signature",
+      "desc": "签字链缺环：签发/许可环节人员留空",
+      "expect": ["process_signature"],
+      "targets": {
+        "work_first": ["permitor"],
+        "work_second": ["issuer"],
+        "line_work_first": ["permitor"],
+        "line_work_second": ["permitor"],
+        "emergency_repair": ["permitor"]
+      },
+      "note": "操作票签批链为监护人/操作人双签，缺环走 missing_field；工作票缺环走本类型"
+    },
+    {
+      "defect_type": "ticket_type_mismatch",
+      "check_type": "ticket_type_match",
+      "desc": "票种与工作内容错配：第二种工作票（不需停电）的任务含需停电作业",
+      "expect": ["ticket_type_match"],
+      "targets": {
+        "work_second": ["task"],
+        "line_work_second": ["task"]
+      },
+      "note": "票种标题不变（票种路由按标题关键词），错配体现在任务内容与票种约定冲突"
+    },
+    {
+      "defect_type": "measure_missing",
+      "check_type": "measure_coverage",
+      "desc": "安全措施缺项：第一种票四要素（停电/验电/接地/标示牌遮栏）缺失其一",
+      "expect": ["measure_coverage"],
+      "targets": {
+        "work_first": ["measures"],
+        "line_work_first": ["measures"]
+      },
+      "note": "第二种票措施本就不含四要素，不适用本注入"
+    },
+    {
+      "defect_type": "five_prevention_violation",
+      "check_type": "five_prevention",
+      "desc": "五防违例：未断开断路器即拉开隔离开关（防带负荷拉合隔离开关）",
+      "expect": ["five_prevention"],
+      "targets": {
+        "operating": ["steps"],
+        "line_operating": ["steps"]
+      }
+    },
+    {
+      "defect_type": "double_name_mismatch",
+      "check_type": "consistency",
+      "desc": "设备双重名称/电压等级不一致：任务与操作项中对同一设备标注的电压等级冲突",
+      "expect": ["consistency"],
+      "targets": {
+        "operating": ["steps"],
+        "line_operating": ["steps"]
+      }
+    }
+  ],
+  "mutual_exclusions": [
+    {
+      "pair": ["time_order", "permit_time_out_of_range"],
+      "scope": "同一样例",
+      "reason": "同属时间域操纵：许可区间判定依赖合法计划区间，双注入归因不唯一"
+    },
+    {
+      "pair": ["missing_field", "time_order"],
+      "scope": "missing_field.target ∈ {start_time, end_time, plan_start, plan_end} 时",
+      "reason": "缺时间字段与倒挂属同一时间域双重操纵；缺字段对 time_order 的影响已由 also_expect 覆盖"
+    },
+    {
+      "pair": ["missing_field", "permit_time_out_of_range"],
+      "scope": "missing_field.target ∈ {plan_start, plan_end} 时",
+      "reason": "计划区间缺失则越界判定无基准"
+    },
+    {
+      "pair": ["five_prevention_violation", "double_name_mismatch"],
+      "scope": "同一样例",
+      "reason": "两者均整体改写操作序列文本，双注入时归因与序列内容不唯一"
+    }
+  ],
+  "caps": {
+    "operation_steps": {"min": 2, "max": 10, "reason": "操作序列封顶防组合爆炸；正常样例 5 步左右"},
+    "safety_measure_items": {"min": 1, "max": 8, "reason": "安全措施条目封顶；第一种票四要素=4 条"},
+    "crew_members": {"min": 1, "max": 5, "reason": "人员名单封顶，顿号拼接为单值字段"},
+    "defects_per_sample": {"min": 0, "max": 2, "reason": "组合样例最多双缺陷，且须过互斥矩阵"}
+  }
+}

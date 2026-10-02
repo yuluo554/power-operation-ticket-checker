@@ -1,0 +1,166 @@
+{
+  "schema": "powerticket-ticket-templates/0.1",
+  "note": "7 票种票样模板：字段清单重构自 Q/GDW 1799.1-2013 / Q/GDW 1799.2-2013 附录票样结构，字段名与全部内容自拟虚构，不入官方原文。附录编号在不同公开渠道存在分歧（1799.1 侧一源作附录A倒闸操作票/附录B第一种工作票，另一源作附录B/附录C），官方原文入库（M3）前一律 status=待核对。",
+  "placeholder_syntax": {
+    "scalar": "{{key}}——生成器填值；注入缺失时填空串，渲染后保留『标签：』空值行",
+    "list_block": "{{key}}——块字段（steps/measures），生成器展开为多行『序号  内容』",
+    "guarantee": "渲染后不得残留 {{ 占位符（测试锁定）"
+  },
+  "channels_checked": [
+    "京东读书 Q/GDW 1799.1-2013 在线阅读页（cread.jd.com，2026-10-02）：确认附录含倒闸操作票格式/第一种工作票格式（附录编号两源分歧，未逐字核录）",
+    "安全管理网《工作票的使用和管理》（safehoo.com/item/302749.aspx，2026-10-02 抓取）：工作票栏目清单（班组/工作负责人/工作班成员/工作地点/工作内容/计划工作时间/安全措施各栏/签发人/许可开始时间/工作终结时间）及『安全措施中下列由工作许可人填写栏由许可人逐一填写』的分工原文",
+    "WebSearch 摘要（不采信为原文，仅定位）：5.3.4 倒闸操作由操作人员填用操作票（附录A）等条号线索，待 M3 官方原文核对"
+  ],
+  "templates": {
+    "operating": {
+      "name": "变电站倒闸操作票",
+      "file": "operating.txt",
+      "standard": "Q/GDW 1799.1-2013",
+      "standard_part": "附录（变电站倒闸操作票格式，编号待核对：一源作附录A）",
+      "status": "待核对",
+      "fields": [
+        {"key": "ticket_no", "label": "编号", "role": "scalar", "required": true, "injectable_missing": true, "source": "票头编号栏", "status": "待核对"},
+        {"key": "task", "label": "操作任务", "role": "scalar", "required": true, "injectable_missing": true, "source": "票头操作任务栏（含设备双重名称与目标状态）", "status": "待核对"},
+        {"key": "start_time", "label": "操作开始时间", "role": "scalar", "required": true, "injectable_missing": true, "source": "票头操作开始时间栏", "status": "待核对"},
+        {"key": "end_time", "label": "操作结束时间", "role": "scalar", "required": true, "injectable_missing": true, "source": "票头操作结束时间栏", "status": "待核对"},
+        {"key": "dispatcher", "label": "发令人", "role": "ambient", "required": true, "injectable_missing": false, "source": "票头发令人栏", "status": "待核对"},
+        {"key": "guardian", "label": "监护人", "role": "scalar", "required": true, "injectable_missing": true, "source": "票头监护人签名栏", "status": "待核对"},
+        {"key": "operator", "label": "操作人", "role": "scalar", "required": true, "injectable_missing": true, "source": "票头操作人签名栏", "status": "待核对"},
+        {"key": "steps", "label": "顺序/操作项目", "role": "list", "required": true, "injectable_missing": false, "source": "票体逐项操作序列（顺序号+操作项目，逐项填写）", "status": "待核对"},
+        {"key": "remarks", "label": "备注", "role": "ambient", "required": false, "injectable_missing": false, "source": "票尾备注栏", "status": "待核对"}
+      ],
+      "layout_note": "与 M0 demo 样例（data/samples/sample-operating-01.txt）行布局一致：『顺序  操作项目』表头至『备注：』之间为操作序列区（解析器约定）"
+    },
+    "line_operating": {
+      "name": "电力线路倒闸操作票",
+      "file": "line_operating.txt",
+      "standard": "Q/GDW 1799.2-2013",
+      "standard_part": "附录（电力线路倒闸操作票格式，plan/01 记附录I，待核对）",
+      "status": "待核对",
+      "fields": [
+        {"key": "ticket_no", "label": "编号", "role": "scalar", "required": true, "injectable_missing": true, "source": "票头编号栏", "status": "待核对"},
+        {"key": "task", "label": "操作任务", "role": "scalar", "required": true, "injectable_missing": true, "source": "票头操作任务栏（含线路名称及杆号双重名称）", "status": "待核对"},
+        {"key": "start_time", "label": "操作开始时间", "role": "scalar", "required": true, "injectable_missing": true, "source": "票头操作开始时间栏", "status": "待核对"},
+        {"key": "end_time", "label": "操作结束时间", "role": "scalar", "required": true, "injectable_missing": true, "source": "票头操作结束时间栏", "status": "待核对"},
+        {"key": "dispatcher", "label": "发令人", "role": "ambient", "required": true, "injectable_missing": false, "source": "票头发令人栏", "status": "待核对"},
+        {"key": "guardian", "label": "监护人", "role": "scalar", "required": true, "injectable_missing": true, "source": "票头监护人签名栏", "status": "待核对"},
+        {"key": "operator", "label": "操作人", "role": "scalar", "required": true, "injectable_missing": true, "source": "票头操作人签名栏", "status": "待核对"},
+        {"key": "steps", "label": "顺序/操作项目", "role": "list", "required": true, "injectable_missing": false, "source": "票体逐项操作序列（顺序号+操作项目）", "status": "待核对"},
+        {"key": "remarks", "label": "备注", "role": "ambient", "required": false, "injectable_missing": false, "source": "票尾备注栏", "status": "待核对"}
+      ]
+    },
+    "work_first": {
+      "name": "变电站（发电厂）第一种工作票",
+      "file": "work_first.txt",
+      "standard": "Q/GDW 1799.1-2013",
+      "standard_part": "附录（第一种工作票格式，编号待核对：一源作附录B、一源作附录C）",
+      "status": "待核对",
+      "fields": [
+        {"key": "ticket_no", "label": "编号", "role": "scalar", "required": true, "injectable_missing": true, "source": "票头编号栏", "status": "待核对"},
+        {"key": "work_unit", "label": "工作单位", "role": "ambient", "required": true, "injectable_missing": false, "source": "票头工作单位（班组）栏", "status": "待核对"},
+        {"key": "work_head", "label": "工作负责人", "role": "scalar", "required": true, "injectable_missing": false, "source": "工作负责人（监护人）栏；同时是签字链终结环节，缺陷注入仅走 signature_gap，避免双重归因", "status": "待核对"},
+        {"key": "crew", "label": "工作班成员", "role": "scalar", "required": true, "injectable_missing": true, "source": "工作班成员栏（不含工作负责人，多值顿号分隔）", "status": "待核对"},
+        {"key": "location", "label": "工作地点及设备双重名称", "role": "scalar", "required": true, "injectable_missing": true, "source": "工作地点及设备双重名称栏", "status": "待核对"},
+        {"key": "task", "label": "工作任务", "role": "scalar", "required": true, "injectable_missing": true, "source": "工作任务栏", "status": "待核对"},
+        {"key": "plan_start", "label": "计划工作时间（起）", "role": "scalar", "required": true, "injectable_missing": true, "source": "计划工作时间栏『自』端", "status": "待核对"},
+        {"key": "plan_end", "label": "计划工作时间（止）", "role": "scalar", "required": true, "injectable_missing": true, "source": "计划工作时间栏『至』端", "status": "待核对"},
+        {"key": "measures", "label": "安全措施（签发人填）", "role": "list", "required": true, "injectable_missing": false, "source": "安全措施栏『下列由工作票签发人填写』（四要素：停电/验电/装设接地线/悬挂标示牌和装设遮栏）", "status": "待核对"},
+        {"key": "issuer", "label": "工作票签发人", "role": "scalar", "required": true, "injectable_missing": false, "source": "工作票签发人签名栏；缺陷注入走 signature_gap（target=issuer）", "status": "待核对"},
+        {"key": "permit_start", "label": "许可开始工作时间", "role": "scalar", "required": true, "injectable_missing": false, "source": "许可开始工作时间栏", "status": "待核对"},
+        {"key": "permitor", "label": "工作许可人", "role": "scalar", "required": true, "injectable_missing": false, "source": "工作许可人签名栏；缺陷注入走 signature_gap（target=permitor）", "status": "待核对"},
+        {"key": "end_time", "label": "工作终结时间", "role": "scalar", "required": true, "injectable_missing": false, "source": "工作终结时间栏", "status": "待核对"},
+        {"key": "remarks", "label": "备注", "role": "ambient", "required": false, "injectable_missing": false, "source": "票尾备注栏", "status": "待核对"}
+      ],
+      "layout_note": "工作班成员用『工作班成员』为栏目名（官方票样作『工作班人员（不包括工作负责人）』，为避免标签含字段名导致解析歧义，重构时改名，记入偏差）"
+    },
+    "work_second": {
+      "name": "变电站（发电厂）第二种工作票",
+      "file": "work_second.txt",
+      "standard": "Q/GDW 1799.1-2013",
+      "standard_part": "附录（第二种工作票格式，编号待核对）",
+      "status": "待核对",
+      "fields": [
+        {"key": "ticket_no", "label": "编号", "role": "scalar", "required": true, "injectable_missing": true, "source": "票头编号栏", "status": "待核对"},
+        {"key": "work_unit", "label": "工作单位", "role": "ambient", "required": true, "injectable_missing": false, "source": "票头工作单位（班组）栏", "status": "待核对"},
+        {"key": "work_head", "label": "工作负责人", "role": "scalar", "required": true, "injectable_missing": false, "source": "工作负责人（监护人）栏", "status": "待核对"},
+        {"key": "crew", "label": "工作班成员", "role": "scalar", "required": true, "injectable_missing": true, "source": "工作班成员栏", "status": "待核对"},
+        {"key": "location", "label": "工作地点及设备双重名称", "role": "scalar", "required": true, "injectable_missing": true, "source": "工作地点及设备双重名称栏", "status": "待核对"},
+        {"key": "task", "label": "工作任务", "role": "scalar", "required": true, "injectable_missing": true, "source": "工作任务栏", "status": "待核对"},
+        {"key": "plan_start", "label": "计划工作时间（起）", "role": "scalar", "required": true, "injectable_missing": true, "source": "计划工作时间栏『自』端", "status": "待核对"},
+        {"key": "plan_end", "label": "计划工作时间（止）", "role": "scalar", "required": true, "injectable_missing": true, "source": "计划工作时间栏『至』端", "status": "待核对"},
+        {"key": "measures", "label": "安全措施（签发人填）", "role": "list", "required": true, "injectable_missing": false, "source": "安全措施栏（不需停电的措施：标示牌/遮栏/围栏等）", "status": "待核对"},
+        {"key": "issuer", "label": "工作票签发人", "role": "scalar", "required": true, "injectable_missing": false, "source": "工作票签发人签名栏；缺陷注入走 signature_gap（target=issuer）", "status": "待核对"},
+        {"key": "permit_start", "label": "许可开始工作时间", "role": "scalar", "required": true, "injectable_missing": false, "source": "许可开始工作时间栏", "status": "待核对"},
+        {"key": "permitor", "label": "工作许可人", "role": "scalar", "required": true, "injectable_missing": false, "source": "工作许可人签名栏", "status": "待核对"},
+        {"key": "end_time", "label": "工作终结时间", "role": "scalar", "required": true, "injectable_missing": false, "source": "工作终结时间栏", "status": "待核对"},
+        {"key": "remarks", "label": "备注", "role": "ambient", "required": false, "injectable_missing": false, "source": "票尾备注栏", "status": "待核对"}
+      ]
+    },
+    "line_work_first": {
+      "name": "电力线路第一种工作票",
+      "file": "line_work_first.txt",
+      "standard": "Q/GDW 1799.2-2013",
+      "standard_part": "附录（电力线路第一种工作票格式，plan/01 记附录I，待核对）",
+      "status": "待核对",
+      "fields": [
+        {"key": "ticket_no", "label": "编号", "role": "scalar", "required": true, "injectable_missing": true, "source": "票头编号栏", "status": "待核对"},
+        {"key": "work_unit", "label": "工作单位", "role": "ambient", "required": true, "injectable_missing": false, "source": "票头工作单位（班组）栏", "status": "待核对"},
+        {"key": "location", "label": "线路名称及杆号（双重名称）", "role": "scalar", "required": true, "injectable_missing": true, "source": "线路名称及杆号双重名称栏", "status": "待核对"},
+        {"key": "task", "label": "工作任务", "role": "scalar", "required": true, "injectable_missing": true, "source": "工作任务栏", "status": "待核对"},
+        {"key": "plan_start", "label": "计划工作时间（起）", "role": "scalar", "required": true, "injectable_missing": true, "source": "计划工作时间栏『自』端", "status": "待核对"},
+        {"key": "plan_end", "label": "计划工作时间（止）", "role": "scalar", "required": true, "injectable_missing": true, "source": "计划工作时间栏『至』端", "status": "待核对"},
+        {"key": "work_head", "label": "工作负责人", "role": "scalar", "required": true, "injectable_missing": false, "source": "工作负责人（监护人）栏", "status": "待核对"},
+        {"key": "crew", "label": "工作班成员", "role": "scalar", "required": true, "injectable_missing": true, "source": "工作班成员栏", "status": "待核对"},
+        {"key": "measures", "label": "安全措施（停电）", "role": "list", "required": true, "injectable_missing": false, "source": "停电范围及安全措施栏（断开断路器/隔离开关、验电、装设接地线、悬挂标示牌）", "status": "待核对"},
+        {"key": "issuer", "label": "工作票签发人", "role": "scalar", "required": true, "injectable_missing": false, "source": "工作票签发人签名栏", "status": "待核对"},
+        {"key": "permit_start", "label": "许可开始工作时间", "role": "scalar", "required": true, "injectable_missing": false, "source": "许可开始工作时间栏", "status": "待核对"},
+        {"key": "permitor", "label": "工作许可人", "role": "scalar", "required": true, "injectable_missing": false, "source": "工作许可人签名栏；缺陷注入走 signature_gap（target=permitor）", "status": "待核对"},
+        {"key": "end_time", "label": "工作终结时间", "role": "scalar", "required": true, "injectable_missing": false, "source": "工作终结时间栏", "status": "待核对"},
+        {"key": "remarks", "label": "备注", "role": "ambient", "required": false, "injectable_missing": false, "source": "票尾备注栏", "status": "待核对"}
+      ]
+    },
+    "line_work_second": {
+      "name": "电力线路第二种工作票",
+      "file": "line_work_second.txt",
+      "standard": "Q/GDW 1799.2-2013",
+      "standard_part": "附录（电力线路第二种工作票格式，plan/01 记附录I，待核对）",
+      "status": "待核对",
+      "fields": [
+        {"key": "ticket_no", "label": "编号", "role": "scalar", "required": true, "injectable_missing": true, "source": "票头编号栏", "status": "待核对"},
+        {"key": "work_unit", "label": "工作单位", "role": "ambient", "required": true, "injectable_missing": false, "source": "票头工作单位（班组）栏", "status": "待核对"},
+        {"key": "location", "label": "线路名称及杆号（双重名称）", "role": "scalar", "required": true, "injectable_missing": true, "source": "线路名称及杆号双重名称栏", "status": "待核对"},
+        {"key": "task", "label": "工作任务", "role": "scalar", "required": true, "injectable_missing": true, "source": "工作任务栏", "status": "待核对"},
+        {"key": "plan_start", "label": "计划工作时间（起）", "role": "scalar", "required": true, "injectable_missing": true, "source": "计划工作时间栏『自』端", "status": "待核对"},
+        {"key": "plan_end", "label": "计划工作时间（止）", "role": "scalar", "required": true, "injectable_missing": true, "source": "计划工作时间栏『至』端", "status": "待核对"},
+        {"key": "work_head", "label": "工作负责人", "role": "scalar", "required": true, "injectable_missing": false, "source": "工作负责人（监护人）栏", "status": "待核对"},
+        {"key": "crew", "label": "工作班成员", "role": "scalar", "required": true, "injectable_missing": true, "source": "工作班成员栏", "status": "待核对"},
+        {"key": "measures", "label": "安全措施（不停电）", "role": "list", "required": true, "injectable_missing": false, "source": "安全措施栏（不需停电的措施：标示牌等）", "status": "待核对"},
+        {"key": "issuer", "label": "工作票签发人", "role": "scalar", "required": true, "injectable_missing": false, "source": "工作票签发人签名栏", "status": "待核对"},
+        {"key": "permit_start", "label": "许可开始工作时间", "role": "scalar", "required": true, "injectable_missing": false, "source": "许可开始工作时间栏", "status": "待核对"},
+        {"key": "permitor", "label": "工作许可人", "role": "scalar", "required": true, "injectable_missing": false, "source": "工作许可人签名栏", "status": "待核对"},
+        {"key": "end_time", "label": "工作终结时间", "role": "scalar", "required": true, "injectable_missing": false, "source": "工作终结时间栏", "status": "待核对"},
+        {"key": "remarks", "label": "备注", "role": "ambient", "required": false, "injectable_missing": false, "source": "票尾备注栏", "status": "待核对"}
+      ]
+    },
+    "emergency_repair": {
+      "name": "事故紧急抢修单",
+      "file": "emergency_repair.txt",
+      "standard": "Q/GDW 1799.1-2013",
+      "standard_part": "附录（事故紧急抢修单格式，编号待核对）",
+      "status": "待核对",
+      "fields": [
+        {"key": "ticket_no", "label": "编号", "role": "scalar", "required": true, "injectable_missing": true, "source": "票头编号栏", "status": "待核对"},
+        {"key": "work_unit", "label": "抢修单位", "role": "ambient", "required": true, "injectable_missing": false, "source": "抢修单位（班组）栏", "status": "待核对"},
+        {"key": "task", "label": "抢修任务", "role": "scalar", "required": true, "injectable_missing": true, "source": "抢修任务栏（设备双重名称及故障简况）", "status": "待核对"},
+        {"key": "measures", "label": "安全措施", "role": "list", "required": true, "injectable_missing": false, "source": "安全措施栏", "status": "待核对"},
+        {"key": "start_time", "label": "抢修开始时间", "role": "scalar", "required": true, "injectable_missing": true, "source": "抢修开始时间栏", "status": "待核对"},
+        {"key": "end_time", "label": "抢修结束时间", "role": "scalar", "required": true, "injectable_missing": true, "source": "抢修结束时间栏", "status": "待核对"},
+        {"key": "work_head", "label": "工作负责人", "role": "scalar", "required": true, "injectable_missing": false, "source": "工作负责人栏", "status": "待核对"},
+        {"key": "crew", "label": "工作班成员", "role": "scalar", "required": true, "injectable_missing": true, "source": "工作班成员栏", "status": "待核对"},
+        {"key": "permitor", "label": "许可人（值班负责人）", "role": "scalar", "required": true, "injectable_missing": false, "source": "许可人（值班负责人）签名栏；缺陷注入走 signature_gap（target=permitor）", "status": "待核对"},
+        {"key": "remarks", "label": "备注", "role": "ambient", "required": false, "injectable_missing": false, "source": "票尾备注栏", "status": "待核对"}
+      ],
+      "layout_note": "抢修单环节精简（抢修许可由值班负责人履行，间断/转移环节不设），待 M3 官方原文核对"
+    }
+  }
+}

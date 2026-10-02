@@ -1,0 +1,591 @@
+{
+  "schema": "powerticket-gen-manifest/0.1",
+  "generator": "data/generator/generate.py",
+  "seed": 20261002,
+  "caps": {
+    "operation_steps": {
+      "min": 2,
+      "max": 10,
+      "reason": "操作序列封顶防组合爆炸；正常样例 5 步左右"
+    },
+    "safety_measure_items": {
+      "min": 1,
+      "max": 8,
+      "reason": "安全措施条目封顶；第一种票四要素=4 条"
+    },
+    "crew_members": {
+      "min": 1,
+      "max": 5,
+      "reason": "人员名单封顶，顿号拼接为单值字段"
+    },
+    "defects_per_sample": {
+      "min": 0,
+      "max": 2,
+      "reason": "组合样例最多双缺陷，且须过互斥矩阵"
+    }
+  },
+  "counts": {
+    "total": 35,
+    "normal": 7,
+    "defect": 28
+  },
+  "source": "程序化自制：data/generator/generate.py（seed=20261002，内容全部虚构）",
+  "license": "项目自带（MIT）",
+  "files": [
+    {
+      "file": "gen-operating-001-normal.txt",
+      "truth": "gen-operating-001-normal.truth.json",
+      "ticket_type": "operating",
+      "kind": "normal",
+      "defects": [],
+      "expect": [],
+      "also_expect": []
+    },
+    {
+      "file": "gen-operating-002-missing-start-time.txt",
+      "truth": "gen-operating-002-missing-start-time.truth.json",
+      "ticket_type": "operating",
+      "kind": "defect",
+      "defects": [
+        {
+          "defect_type": "missing_field",
+          "target": "start_time"
+        }
+      ],
+      "expect": [
+        "required_field"
+      ],
+      "also_expect": [
+        "time_order"
+      ]
+    },
+    {
+      "file": "gen-operating-003-missing-task.txt",
+      "truth": "gen-operating-003-missing-task.truth.json",
+      "ticket_type": "operating",
+      "kind": "defect",
+      "defects": [
+        {
+          "defect_type": "missing_field",
+          "target": "task"
+        }
+      ],
+      "expect": [
+        "required_field"
+      ],
+      "also_expect": []
+    },
+    {
+      "file": "gen-operating-004-time-order.txt",
+      "truth": "gen-operating-004-time-order.truth.json",
+      "ticket_type": "operating",
+      "kind": "defect",
+      "defects": [
+        {
+          "defect_type": "time_order",
+          "target": "start_time,end_time"
+        }
+      ],
+      "expect": [
+        "time_order"
+      ],
+      "also_expect": []
+    },
+    {
+      "file": "gen-operating-005-five-prevention.txt",
+      "truth": "gen-operating-005-five-prevention.truth.json",
+      "ticket_type": "operating",
+      "kind": "defect",
+      "defects": [
+        {
+          "defect_type": "five_prevention_violation",
+          "target": "steps"
+        }
+      ],
+      "expect": [
+        "five_prevention"
+      ],
+      "also_expect": []
+    },
+    {
+      "file": "gen-operating-006-name-mismatch.txt",
+      "truth": "gen-operating-006-name-mismatch.truth.json",
+      "ticket_type": "operating",
+      "kind": "defect",
+      "defects": [
+        {
+          "defect_type": "double_name_mismatch",
+          "target": "steps",
+          "detail": {
+            "task_kv": 110,
+            "step_kv": "35"
+          }
+        }
+      ],
+      "expect": [
+        "consistency"
+      ],
+      "also_expect": []
+    },
+    {
+      "file": "gen-operating-007-combo-missing-guardian-name-mismatch.txt",
+      "truth": "gen-operating-007-combo-missing-guardian-name-mismatch.truth.json",
+      "ticket_type": "operating",
+      "kind": "defect",
+      "defects": [
+        {
+          "defect_type": "missing_field",
+          "target": "guardian"
+        },
+        {
+          "defect_type": "double_name_mismatch",
+          "target": "steps",
+          "detail": {
+            "task_kv": 35,
+            "step_kv": "10"
+          }
+        }
+      ],
+      "expect": [
+        "required_field",
+        "consistency"
+      ],
+      "also_expect": []
+    },
+    {
+      "file": "gen-line_operating-008-normal.txt",
+      "truth": "gen-line_operating-008-normal.truth.json",
+      "ticket_type": "line_operating",
+      "kind": "normal",
+      "defects": [],
+      "expect": [],
+      "also_expect": []
+    },
+    {
+      "file": "gen-line_operating-009-missing-end-time.txt",
+      "truth": "gen-line_operating-009-missing-end-time.truth.json",
+      "ticket_type": "line_operating",
+      "kind": "defect",
+      "defects": [
+        {
+          "defect_type": "missing_field",
+          "target": "end_time"
+        }
+      ],
+      "expect": [
+        "required_field"
+      ],
+      "also_expect": [
+        "time_order"
+      ]
+    },
+    {
+      "file": "gen-line_operating-010-time-order.txt",
+      "truth": "gen-line_operating-010-time-order.truth.json",
+      "ticket_type": "line_operating",
+      "kind": "defect",
+      "defects": [
+        {
+          "defect_type": "time_order",
+          "target": "start_time,end_time"
+        }
+      ],
+      "expect": [
+        "time_order"
+      ],
+      "also_expect": []
+    },
+    {
+      "file": "gen-line_operating-011-five-prevention.txt",
+      "truth": "gen-line_operating-011-five-prevention.truth.json",
+      "ticket_type": "line_operating",
+      "kind": "defect",
+      "defects": [
+        {
+          "defect_type": "five_prevention_violation",
+          "target": "steps"
+        }
+      ],
+      "expect": [
+        "five_prevention"
+      ],
+      "also_expect": []
+    },
+    {
+      "file": "gen-line_operating-012-combo-missing-task-five-prevention.txt",
+      "truth": "gen-line_operating-012-combo-missing-task-five-prevention.truth.json",
+      "ticket_type": "line_operating",
+      "kind": "defect",
+      "defects": [
+        {
+          "defect_type": "missing_field",
+          "target": "task"
+        },
+        {
+          "defect_type": "five_prevention_violation",
+          "target": "steps"
+        }
+      ],
+      "expect": [
+        "required_field",
+        "five_prevention"
+      ],
+      "also_expect": []
+    },
+    {
+      "file": "gen-work_first-013-normal.txt",
+      "truth": "gen-work_first-013-normal.truth.json",
+      "ticket_type": "work_first",
+      "kind": "normal",
+      "defects": [],
+      "expect": [],
+      "also_expect": []
+    },
+    {
+      "file": "gen-work_first-014-missing-task.txt",
+      "truth": "gen-work_first-014-missing-task.truth.json",
+      "ticket_type": "work_first",
+      "kind": "defect",
+      "defects": [
+        {
+          "defect_type": "missing_field",
+          "target": "task"
+        }
+      ],
+      "expect": [
+        "required_field"
+      ],
+      "also_expect": []
+    },
+    {
+      "file": "gen-work_first-015-missing-plan-end.txt",
+      "truth": "gen-work_first-015-missing-plan-end.truth.json",
+      "ticket_type": "work_first",
+      "kind": "defect",
+      "defects": [
+        {
+          "defect_type": "missing_field",
+          "target": "plan_end"
+        }
+      ],
+      "expect": [
+        "required_field"
+      ],
+      "also_expect": [
+        "time_order"
+      ]
+    },
+    {
+      "file": "gen-work_first-016-permit-out-of-range.txt",
+      "truth": "gen-work_first-016-permit-out-of-range.truth.json",
+      "ticket_type": "work_first",
+      "kind": "defect",
+      "defects": [
+        {
+          "defect_type": "permit_time_out_of_range",
+          "target": "permit_start",
+          "detail": {
+            "mode": "before_start"
+          }
+        }
+      ],
+      "expect": [
+        "time_order"
+      ],
+      "also_expect": []
+    },
+    {
+      "file": "gen-work_first-017-measure-missing.txt",
+      "truth": "gen-work_first-017-measure-missing.truth.json",
+      "ticket_type": "work_first",
+      "kind": "defect",
+      "defects": [
+        {
+          "defect_type": "measure_missing",
+          "target": "measures",
+          "detail": {
+            "dropped_index": 3
+          }
+        }
+      ],
+      "expect": [
+        "measure_coverage"
+      ],
+      "also_expect": []
+    },
+    {
+      "file": "gen-work_first-018-signature-gap-permitor.txt",
+      "truth": "gen-work_first-018-signature-gap-permitor.truth.json",
+      "ticket_type": "work_first",
+      "kind": "defect",
+      "defects": [
+        {
+          "defect_type": "signature_gap",
+          "target": "permitor"
+        }
+      ],
+      "expect": [
+        "process_signature"
+      ],
+      "also_expect": []
+    },
+    {
+      "file": "gen-work_first-019-combo-measure-missing-signature-gap.txt",
+      "truth": "gen-work_first-019-combo-measure-missing-signature-gap.truth.json",
+      "ticket_type": "work_first",
+      "kind": "defect",
+      "defects": [
+        {
+          "defect_type": "measure_missing",
+          "target": "measures",
+          "detail": {
+            "dropped_index": 3
+          }
+        },
+        {
+          "defect_type": "signature_gap",
+          "target": "permitor"
+        }
+      ],
+      "expect": [
+        "measure_coverage",
+        "process_signature"
+      ],
+      "also_expect": []
+    },
+    {
+      "file": "gen-work_second-020-normal.txt",
+      "truth": "gen-work_second-020-normal.truth.json",
+      "ticket_type": "work_second",
+      "kind": "normal",
+      "defects": [],
+      "expect": [],
+      "also_expect": []
+    },
+    {
+      "file": "gen-work_second-021-missing-crew.txt",
+      "truth": "gen-work_second-021-missing-crew.truth.json",
+      "ticket_type": "work_second",
+      "kind": "defect",
+      "defects": [
+        {
+          "defect_type": "missing_field",
+          "target": "crew"
+        }
+      ],
+      "expect": [
+        "required_field"
+      ],
+      "also_expect": []
+    },
+    {
+      "file": "gen-work_second-022-signature-gap-issuer.txt",
+      "truth": "gen-work_second-022-signature-gap-issuer.truth.json",
+      "ticket_type": "work_second",
+      "kind": "defect",
+      "defects": [
+        {
+          "defect_type": "signature_gap",
+          "target": "issuer"
+        }
+      ],
+      "expect": [
+        "process_signature"
+      ],
+      "also_expect": []
+    },
+    {
+      "file": "gen-work_second-023-type-mismatch.txt",
+      "truth": "gen-work_second-023-type-mismatch.truth.json",
+      "ticket_type": "work_second",
+      "kind": "defect",
+      "defects": [
+        {
+          "defect_type": "ticket_type_mismatch",
+          "target": "task"
+        }
+      ],
+      "expect": [
+        "ticket_type_match"
+      ],
+      "also_expect": []
+    },
+    {
+      "file": "gen-line_work_first-024-normal.txt",
+      "truth": "gen-line_work_first-024-normal.truth.json",
+      "ticket_type": "line_work_first",
+      "kind": "normal",
+      "defects": [],
+      "expect": [],
+      "also_expect": []
+    },
+    {
+      "file": "gen-line_work_first-025-missing-location.txt",
+      "truth": "gen-line_work_first-025-missing-location.truth.json",
+      "ticket_type": "line_work_first",
+      "kind": "defect",
+      "defects": [
+        {
+          "defect_type": "missing_field",
+          "target": "location"
+        }
+      ],
+      "expect": [
+        "required_field"
+      ],
+      "also_expect": []
+    },
+    {
+      "file": "gen-line_work_first-026-permit-out-of-range.txt",
+      "truth": "gen-line_work_first-026-permit-out-of-range.truth.json",
+      "ticket_type": "line_work_first",
+      "kind": "defect",
+      "defects": [
+        {
+          "defect_type": "permit_time_out_of_range",
+          "target": "permit_start",
+          "detail": {
+            "mode": "before_start"
+          }
+        }
+      ],
+      "expect": [
+        "time_order"
+      ],
+      "also_expect": []
+    },
+    {
+      "file": "gen-line_work_first-027-measure-missing.txt",
+      "truth": "gen-line_work_first-027-measure-missing.truth.json",
+      "ticket_type": "line_work_first",
+      "kind": "defect",
+      "defects": [
+        {
+          "defect_type": "measure_missing",
+          "target": "measures",
+          "detail": {
+            "dropped_index": 1
+          }
+        }
+      ],
+      "expect": [
+        "measure_coverage"
+      ],
+      "also_expect": []
+    },
+    {
+      "file": "gen-line_work_first-028-signature-gap-permitor.txt",
+      "truth": "gen-line_work_first-028-signature-gap-permitor.truth.json",
+      "ticket_type": "line_work_first",
+      "kind": "defect",
+      "defects": [
+        {
+          "defect_type": "signature_gap",
+          "target": "permitor"
+        }
+      ],
+      "expect": [
+        "process_signature"
+      ],
+      "also_expect": []
+    },
+    {
+      "file": "gen-line_work_second-029-normal.txt",
+      "truth": "gen-line_work_second-029-normal.truth.json",
+      "ticket_type": "line_work_second",
+      "kind": "normal",
+      "defects": [],
+      "expect": [],
+      "also_expect": []
+    },
+    {
+      "file": "gen-line_work_second-030-missing-task.txt",
+      "truth": "gen-line_work_second-030-missing-task.truth.json",
+      "ticket_type": "line_work_second",
+      "kind": "defect",
+      "defects": [
+        {
+          "defect_type": "missing_field",
+          "target": "task"
+        }
+      ],
+      "expect": [
+        "required_field"
+      ],
+      "also_expect": []
+    },
+    {
+      "file": "gen-line_work_second-031-type-mismatch.txt",
+      "truth": "gen-line_work_second-031-type-mismatch.truth.json",
+      "ticket_type": "line_work_second",
+      "kind": "defect",
+      "defects": [
+        {
+          "defect_type": "ticket_type_mismatch",
+          "target": "task"
+        }
+      ],
+      "expect": [
+        "ticket_type_match"
+      ],
+      "also_expect": []
+    },
+    {
+      "file": "gen-emergency_repair-032-normal.txt",
+      "truth": "gen-emergency_repair-032-normal.truth.json",
+      "ticket_type": "emergency_repair",
+      "kind": "normal",
+      "defects": [],
+      "expect": [],
+      "also_expect": []
+    },
+    {
+      "file": "gen-emergency_repair-033-missing-crew.txt",
+      "truth": "gen-emergency_repair-033-missing-crew.truth.json",
+      "ticket_type": "emergency_repair",
+      "kind": "defect",
+      "defects": [
+        {
+          "defect_type": "missing_field",
+          "target": "crew"
+        }
+      ],
+      "expect": [
+        "required_field"
+      ],
+      "also_expect": []
+    },
+    {
+      "file": "gen-emergency_repair-034-time-order.txt",
+      "truth": "gen-emergency_repair-034-time-order.truth.json",
+      "ticket_type": "emergency_repair",
+      "kind": "defect",
+      "defects": [
+        {
+          "defect_type": "time_order",
+          "target": "start_time,end_time"
+        }
+      ],
+      "expect": [
+        "time_order"
+      ],
+      "also_expect": []
+    },
+    {
+      "file": "gen-emergency_repair-035-signature-gap-permitor.txt",
+      "truth": "gen-emergency_repair-035-signature-gap-permitor.truth.json",
+      "ticket_type": "emergency_repair",
+      "kind": "defect",
+      "defects": [
+        {
+          "defect_type": "signature_gap",
+          "target": "permitor"
+        }
+      ],
+      "expect": [
+        "process_signature"
+      ],
+      "also_expect": []
+    }
+  ]
+}
