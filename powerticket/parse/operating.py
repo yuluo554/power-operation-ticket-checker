@@ -1,68 +1,45 @@
-"""变电站倒闸操作票解析器（骨架版：覆盖 demo 样例槽位，M2 全量细化）。"""
+"""倒闸操作票解析器：变电站（operating）与电力线路（line_operating）共用同一布局骨架。
+
+布局契约见 data/ticket_templates/operating.txt 与 line_operating.txt（两者标签一致）。
+"""
 from __future__ import annotations
 
 import re
 
-from ..models import Evidence, FieldValue, OperationStep, TicketCard
+from ..models import Evidence, OperationStep, TicketCard
+from .common import extract_labeled_fields, extract_numbered_block, labeled_value_re
 
-# 字段值限定单行（[ \t]* 而非 \s*）：\s 会吃掉换行，空值字段会把下一行内容误抽为本字段值
-_FIELD_PATTERNS = {
-    "ticket_no": re.compile(r"编号[：:][ \t]*(\S+)"),
-    "task": re.compile(r"操作任务[：:][ \t]*(.+)"),
-    "start_time": re.compile(r"开始时间[：:][ \t]*(.+)"),
-    "end_time": re.compile(r"结束时间[：:][ \t]*(.+)"),
-    "guardian": re.compile(r"监护人[：:][ \t]*(\S+)"),
-    "operator": re.compile(r"操作人[：:][ \t]*(\S+)"),
+# capture 为 None 的字段取整行值（(.+)）；人名/编号类用 (\S+) 收紧
+_FIELD_SPECS = {
+    "ticket_no": ("编号", r"(\S+)"),
+    "task": ("操作任务", None),
+    "start_time": ("操作开始时间", None),
+    "end_time": ("操作结束时间", None),
+    "dispatcher": ("发令人", r"(\S+)"),
+    "guardian": ("监护人", r"(\S+)"),
+    "operator": ("操作人", r"(\S+)"),
+    "remarks": ("备注", None),
 }
-_STEP_PATTERN = re.compile(r"^\s*(\d{1,3})[\s．.、]\s*(\S.*)$")
-_TIME_PATTERN = re.compile(r"(\d{4})年(\d{1,2})月(\d{1,2})日\s*(\d{1,2}):(\d{2})")
+_FIELD_PATTERNS = {
+    name: labeled_value_re(label, capture or r"(.+)")
+    for name, (label, capture) in _FIELD_SPECS.items()
+}
+_STEPS_HEADER_RE = re.compile(r"^顺序")
 
 
-def _to_iso_time(raw: str):
-    m = _TIME_PATTERN.search(raw)
-    if not m:
-        return None
-    year, month, day, hour, minute = m.groups()
-    return f"{year}-{int(month):02d}-{int(day):02d}T{int(hour):02d}:{minute}"
-
-
-def parse_operating_ticket(text: str) -> TicketCard:
-    card = TicketCard(ticket_type="operating")
-    for name, pattern in _FIELD_PATTERNS.items():
-        m = pattern.search(text)
-        if not m:
-            card.warnings.append(f"字段缺失: {name}")
-            continue
-        raw = m.group(1).strip()
-        value = _to_iso_time(raw) if name in ("start_time", "end_time") else raw
-        if value is None:
-            # 合法性校验：格式非法即丢弃，不得带病入卡
-            card.warnings.append(f"字段值非法已丢弃: {name}={raw!r}")
-            continue
-        card.fields[name] = FieldValue(
-            value=value, evidence=Evidence(region="body", quote=m.group(0).strip())
-        )
-
-    in_steps = False
-    for line in text.split("\n"):
-        stripped = line.strip()
-        if stripped.startswith("顺序"):
-            in_steps = True
-            continue
-        if stripped.startswith("备注"):
-            in_steps = False
-            continue
-        if not in_steps:
-            continue
-        m = _STEP_PATTERN.match(line)
-        if m:
-            card.operation_sequence.append(
-                OperationStep(
-                    no=int(m.group(1)),
-                    action=m.group(2).strip(),
-                    evidence=Evidence(region="body", quote=stripped),
-                )
-            )
+def parse_operating_like(text: str, ticket_type: str) -> TicketCard:
+    """倒闸操作票布局 → 参数卡（ticket_type 区分变电站/电力线路）。"""
+    card = TicketCard(ticket_type=ticket_type)
+    extract_labeled_fields(text, card, _FIELD_PATTERNS)
+    card.operation_sequence = [
+        OperationStep(no=no, action=action, evidence=Evidence(region="body", quote=quote))
+        for no, action, quote in extract_numbered_block(text, _STEPS_HEADER_RE)
+    ]
     if not card.operation_sequence:
         card.warnings.append("未解析到操作序列")
     return card
+
+
+def parse_operating_ticket(text: str) -> TicketCard:
+    """变电站倒闸操作票 → 参数卡。"""
+    return parse_operating_like(text, "operating")

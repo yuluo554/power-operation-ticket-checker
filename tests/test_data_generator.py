@@ -215,62 +215,103 @@ def test_no_mutual_exclusion_violations_in_committed():
 
 
 # ---------------------------------------------------------------------------
-# operating 样例 × 现有解析器/规则引擎 回归对账（M2 起扩展到其余票种）
+# 全 35 份样例 × 7 票种解析器/规则引擎 回归对账（M2：operating 对账推广到全集）
 # ---------------------------------------------------------------------------
 
-def test_generated_operating_normal_parses_and_matches_truth():
-    tr = json.loads((GEN_OUT / "gen-operating-001-normal.truth.json").read_text(encoding="utf-8"))
+# 备注栏为虚构声明，不入真值（truth semantics_note），但属于注册字段、解析器照常抽取
+EXTRACTED_BUT_UNTRUTHED = {"remarks"}
+# 注入缺失=字段留空并从真值 fields 移除的两类缺陷
+BLANKING_DEFECTS = ("missing_field", "signature_gap")
+# 当前规则库 check_type 覆盖面（M3 扩展后由 M4 基准接管全集对账）
+COVERED_CHECK_TYPES = {"required_field", "time_order"}
+
+
+def _truth_payloads():
+    for p in sorted(GEN_OUT.glob("*.truth.json")):
+        yield p, json.loads(p.read_text(encoding="utf-8"))
+
+
+def _blanked(tr):
+    return {d["target"] for d in tr["defects"] if d["defect_type"] in BLANKING_DEFECTS}
+
+
+def _covered_expected(tr):
+    """当前已实现规则语义能推出的期望子集：time_order 期望仅在倒挂注入或缺时间字段时算已覆盖
+    （permit_time_out_of_range 的区间校核规则属 M3 扩展）。"""
+    expected = set(tr["expect"]) | set(tr["also_expect"])
+    covered = set(expected & COVERED_CHECK_TYPES)
+    if "time_order" in covered:
+        dts = {d["defect_type"] for d in tr["defects"]}
+        if not dts & {"time_order", "missing_field"}:
+            covered.discard("time_order")
+    return covered
+
+
+TRUTHS = list(_truth_payloads())
+NORMAL_TRUTHS = [(p, tr) for p, tr in TRUTHS if tr["kind"] == "normal"]
+COVERED_EXPECTATION_TRUTHS = [(p, tr) for p, tr in TRUTHS if _covered_expected(tr)]
+
+
+@pytest.mark.parametrize("truth_path,payload", TRUTHS, ids=[p.stem for p, _ in TRUTHS])
+def test_generated_sample_parse_matches_truth(truth_path, payload):
+    tr = payload
     card = parse_ticket((GEN_OUT / tr["file"]).read_text(encoding="utf-8"))
-    assert card.ticket_type == "operating"
-    for key in ("ticket_no", "task", "start_time", "end_time", "guardian", "operator"):
-        assert str(card.fields[key].value) == tr["fields"][key], key
-    seq = tr["operation_sequence"]
-    assert [s["no"] for s in seq] == [s.no for s in card.operation_sequence]
-    assert [s["action"] for s in seq] == [s.action for s in card.operation_sequence]
-    assert not card.warnings
-    # dispatcher 属 M2 解析范围：真值登记（目标规格），M0 骨架解析器暂不抽取
-    assert "dispatcher" in tr["fields"]
+    assert card.ticket_type == tr["ticket_type"], tr["file"]
+    # 注入缺失字段：不入卡且必留痕（warnings）
+    for target in sorted(_blanked(tr)):
+        assert target not in card.fields, (tr["file"], target)
+        assert any(target in w for w in card.warnings), (tr["file"], target)
+    # truth.fields vs card.fields 逐项对账（值+证据）；remarks 是唯一不入真值的已抽取字段
+    assert set(card.fields) - EXTRACTED_BUT_UNTRUTHED == set(tr["fields"]), tr["file"]
+    for key, want in tr["fields"].items():
+        got = card.fields[key]
+        assert str(got.value) == want, (tr["file"], key)
+        assert got.evidence is not None and got.evidence.quote, (tr["file"], key)
+    # 列表块对账（操作票对序列、工作票/抢修单对安全措施，互不越界）
+    if "operation_sequence" in tr:
+        assert [s.no for s in card.operation_sequence] == [
+            s["no"] for s in tr["operation_sequence"]
+        ], tr["file"]
+        assert [s.action for s in card.operation_sequence] == [
+            s["action"] for s in tr["operation_sequence"]
+        ], tr["file"]
+    else:
+        assert not card.operation_sequence, tr["file"]
+    if "safety_measures" in tr:
+        assert [m.text for m in card.safety_measures] == tr["safety_measures"], tr["file"]
+        assert [m.no for m in card.safety_measures] == list(
+            range(1, len(tr["safety_measures"]) + 1)
+        ), tr["file"]
+    else:
+        assert not card.safety_measures, tr["file"]
 
 
 @pytest.mark.parametrize(
-    "stem,field",
-    [
-        ("gen-operating-002-missing-start-time", "start_time"),
-        ("gen-operating-003-missing-task", "task"),
-        ("gen-operating-007-combo-missing-guardian-name-mismatch", "guardian"),
-    ],
+    "truth_path,payload", NORMAL_TRUTHS, ids=[p.stem for p, _ in NORMAL_TRUTHS]
 )
-def test_generated_operating_missing_field_detected(stem, field):
-    tr = json.loads((GEN_OUT / f"{stem}.truth.json").read_text(encoding="utf-8"))
-    card = parse_ticket((GEN_OUT / f"{stem}.txt").read_text(encoding="utf-8"))
-    assert field not in card.fields
-    assert any(field in w for w in card.warnings)
-    assert field not in tr["fields"]
-    assert "required_field" in tr["expect"]
-    if field in ("start_time", "end_time"):
-        assert "time_order" in tr["also_expect"]
-
-
-def test_generated_operating_time_order_rule_fires():
+def test_generated_normal_sample_no_false_alarm(truth_path, payload):
     from powerticket.rules import load_rules, run_checks
 
-    tr = json.loads((GEN_OUT / "gen-operating-004-time-order.truth.json").read_text(encoding="utf-8"))
+    tr = payload
+    card = parse_ticket((GEN_OUT / tr["file"]).read_text(encoding="utf-8"))
+    conclusions = run_checks(card, load_rules())
+    non_pass = [(c.rule_id, c.verdict) for c in conclusions if c.verdict != "合规"]
+    assert not non_pass, (tr["file"], non_pass)
+    assert not card.warnings, tr["file"]
+
+
+@pytest.mark.parametrize(
+    "truth_path,payload",
+    COVERED_EXPECTATION_TRUTHS,
+    ids=[p.stem for p, _ in COVERED_EXPECTATION_TRUTHS],
+)
+def test_generated_sample_covered_expectations_fire(truth_path, payload):
+    """已实现规则语义覆盖的期望（required_field/time_order）必须在缺陷样例上非 pass。"""
+    from powerticket.rules import load_rules, run_checks
+
+    tr = payload
     card = parse_ticket((GEN_OUT / tr["file"]).read_text(encoding="utf-8"))
     rules = load_rules()
     rule_types = {r["id"]: r["check_type"] for r in rules}
     non_pass = {rule_types[c.rule_id] for c in run_checks(card, rules) if c.verdict != "合规"}
-    expected = set(tr["expect"]) | set(tr["also_expect"])
-    # 当前规则库 check_type 覆盖面（M3 扩展后由 M4 基准接管全集对账）
-    covered = {"required_field", "time_order"}
-    assert expected & covered <= non_pass, (expected, non_pass)
-
-
-def test_generated_operating_normal_no_false_alarm():
-    from powerticket.rules import load_rules, run_checks
-
-    tr = json.loads((GEN_OUT / "gen-operating-001-normal.truth.json").read_text(encoding="utf-8"))
-    card = parse_ticket((GEN_OUT / tr["file"]).read_text(encoding="utf-8"))
-    rules = load_rules()
-    conclusions = run_checks(card, rules)
-    non_pass = [c for c in conclusions if c.verdict != "合规"]
-    assert not non_pass, [(c.rule_id, c.verdict) for c in non_pass]
+    assert _covered_expected(tr) <= non_pass, (tr["file"], non_pass)

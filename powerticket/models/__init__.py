@@ -1,4 +1,11 @@
-from .card import TICKET_TYPE_NAMES, Evidence, FieldValue, OperationStep, TicketCard
+from .card import (
+    TICKET_TYPE_NAMES,
+    Evidence,
+    FieldValue,
+    OperationStep,
+    SafetyMeasure,
+    TicketCard,
+)
 from .conclusion import (
     VERDICT_COMPLIANT,
     VERDICT_MANUAL,
@@ -11,6 +18,7 @@ __all__ = [
     "Evidence",
     "FieldValue",
     "OperationStep",
+    "SafetyMeasure",
     "TicketCard",
     "Conclusion",
     "VERDICT_COMPLIANT",

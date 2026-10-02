@@ -10,6 +10,16 @@ from powerticket.rules import RuleError, load_rules, run_checks
 ROOT = Path(__file__).resolve().parents[1]
 SAMPLE = ROOT / "data" / "samples" / "sample-operating-01.txt"
 
+TICKET_TYPES = [
+    "operating",
+    "line_operating",
+    "work_first",
+    "work_second",
+    "line_work_first",
+    "line_work_second",
+    "emergency_repair",
+]
+
 
 def test_load_demo_rules():
     rules = load_rules()
@@ -20,9 +30,22 @@ def test_load_demo_rules():
         assert r["basis"]["standard"]
 
 
-def test_gating_skips_other_ticket_type():
+def test_basic_rules_cover_all_ticket_types():
+    # M2：required_field + time_order 基础通路覆盖全部 7 票种
+    rules = load_rules()
+    for tp in TICKET_TYPES:
+        types = {r["check_type"] for r in rules if tp in r["applies_to"]}
+        assert {"required_field", "time_order"} <= types, tp
+
+
+def test_gating_no_cross_ticket_type_fire():
+    # 类目门控：空 work_first 卡只命中 work_first 自己的规则，operating 系不得跨票种触发
+    rules = load_rules()
     card = TicketCard(ticket_type="work_first")
-    assert run_checks(card, load_rules()) == []
+    fired = {c.rule_id for c in run_checks(card, rules)}
+    assert fired, "work_first 基础规则应对空卡报必填缺失"
+    op_rule_ids = {r["id"] for r in rules if "operating" in r["applies_to"]}
+    assert not fired & op_rule_ids, sorted(fired & op_rule_ids)
 
 
 def test_compliant_sample():

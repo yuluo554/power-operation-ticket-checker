@@ -41,6 +41,8 @@ def _print_pipeline(result: dict) -> None:
     for name, fv in card["fields"].items():
         print(f"  {name}: {fv['value']}  ｜证据｜ {fv['evidence']['quote']}")
     print(f"操作序列: {len(card['operation_sequence'])} 项")
+    if card["safety_measures"]:
+        print(f"安全措施: {len(card['safety_measures'])} 条")
     for w in result["warnings"]:
         print(f"  [告警] {w}")
     print("== 校核结论 ==")

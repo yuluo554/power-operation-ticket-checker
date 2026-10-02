@@ -38,10 +38,20 @@ class OperationStep:
 
 
 @dataclass
+class SafetyMeasure:
+    """安全措施条目（工作票/抢修单逐条措施，M2 定稿：独立容器与 operation_sequence 对称）。"""
+
+    no: int
+    text: str
+    evidence: Optional[Evidence] = None
+
+
+@dataclass
 class TicketCard:
     ticket_type: str
     fields: Dict[str, FieldValue] = field(default_factory=dict)
     operation_sequence: List[OperationStep] = field(default_factory=list)
+    safety_measures: List[SafetyMeasure] = field(default_factory=list)
     warnings: List[str] = field(default_factory=list)
 
     def to_dict(self) -> Dict[str, Any]:
