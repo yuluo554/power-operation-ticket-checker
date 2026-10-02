@@ -5,6 +5,8 @@ __pycache__/
 .venv/
 venv/
 .pytest_cache/
+build/
+dist/
 
 # 环境与密钥
 .env
@@ -17,6 +19,6 @@ reports/
 *.log
 
 # 个人材料与系统文件
- Thumbs.db
+Thumbs.db
 Desktop.ini
 .DS_Store

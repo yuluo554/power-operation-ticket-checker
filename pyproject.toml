@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "power-operation-ticket-checker"
+version = "0.1.0"
+description = "电力'两票'（工作票/操作票）智能审核与合规校核系统：规则优先、依据挂链、基准可复现"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [{ name = "yuluo554" }]
+keywords = ["power", "safety", "work-ticket", "operation-ticket", "compliance", "nlp"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: OS Independent",
+    "Natural Language :: Chinese (Simplified)",
+    "Topic :: Scientific/Engineering",
+]
+# 依赖分层（plan/03 §3）：core 零三方依赖；extras 必须覆盖运行期真实 import
+dependencies = []
+
+[project.optional-dependencies]
+web = ["fastapi>=0.100", "uvicorn>=0.20", "python-multipart>=0.0.5"]
+report = ["python-docx>=0.8.11"]
+llm = ["openai>=1.0"]
+dev = ["pytest>=7"]
+
+[project.scripts]
+powerticket = "powerticket.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["powerticket*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

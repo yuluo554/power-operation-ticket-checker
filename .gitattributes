@@ -1,0 +1,10 @@
+# EOL 门：Windows 开发机 autocrlf 会把 LF 重写成 CRLF，破坏位级一致基准（M1 冻结 fixtures 的前提）
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.docx binary
+*.xlsx binary
+*.pdf binary
+*.zip binary

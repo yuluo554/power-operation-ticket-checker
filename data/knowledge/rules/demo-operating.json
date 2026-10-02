@@ -1,0 +1,40 @@
+{
+  "description": "M0 骨架演示规则：仅覆盖变电站倒闸操作票，验证引擎通路；正式规则库随 M3 知识库入库",
+  "rules": [
+    {
+      "id": "R-OP-001",
+      "name": "操作票必填项完整性",
+      "check_type": "required_field",
+      "applies_to": ["operating"],
+      "basis": {
+        "standard": "Q/GDW 1799.1-2013",
+        "clause": "附录 倒闸操作票格式（字段清单重构）",
+        "status": "待核对"
+      },
+      "level": "形式合规",
+      "risk": "低",
+      "suggestion": "补全缺失的必填字段后重新提交审核。",
+      "params": {
+        "fields": ["ticket_no", "task", "start_time", "end_time", "guardian", "operator"]
+      }
+    },
+    {
+      "id": "R-OP-002",
+      "name": "操作时间顺序合法",
+      "check_type": "time_order",
+      "applies_to": ["operating"],
+      "basis": {
+        "standard": "Q/GDW 1799.1-2013",
+        "clause": "操作票填写要求（时间先后逻辑）",
+        "status": "待核对"
+      },
+      "level": "形式合规",
+      "risk": "一般",
+      "suggestion": "核对操作开始/结束时间填写是否颠倒。",
+      "params": {
+        "start": "start_time",
+        "end": "end_time"
+      }
+    }
+  ]
+}
