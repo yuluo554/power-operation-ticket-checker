@@ -1,5 +1,8 @@
 # HANDOFF-M6（M5 收尾交接快照）
 
+> **已完结（2026-10-02）：M6 已完成——干净环境验证+脱敏+GitHub 公开（v0.1.0）+收尾固化全部落地，
+> 见 plan/RELEASE-M6.md；项目全里程碑收官，本档仅作历史快照，不再续接。**
+>
 > 写于 2026-10-02，M5（编排与交付）收尾。下一里程碑：M6 发布（干净环境验证 + 脱敏 + GitHub 公开 + 收尾固化）。新对话续接提示词：
 > `/goal 读取 "D:\ProgramData\zcode\power-operation-ticket-checker\plan\HANDOFF-M6.md" 继续完成任务`
 

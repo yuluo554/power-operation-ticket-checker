@@ -70,13 +70,29 @@ DESSENSITIZE_AUDIT_OK
 - [x] 用户确认（2026-10-02，对话内三问三答）：公开仓库 yuluo554/power-operation-ticket-checker（MIT 随仓）、
   提交邮箱全历史改写 GitHub noreply（12 提交，filter-branch env-filter + reflog expire + gc aggressive，
   改写后旧邮箱字面值 log -p/提交信息 0 残留，审计/205 测试复跑全绿）、tag v0.1.0 + release + topics 全部执行
-- [ ] 建仓+推送
-- [ ] tag + release
-- [ ] topics
-- [ ] CI 首跑核验
+- [x] 建仓+推送（2026-10-02）：`gh repo create --public`（description 中英双语）；
+  推送走 SSH remote（git 主机别名形式，不展开字面 URL）——gh token 无 workflow scope
+  且历史含 `.github/workflows/`，HTTPS 推送必被拒（方法论实录坑，SSH 不受 OAuth scope 限制），实测一次通过
+- [x] tag + release（2026-10-02）：`git tag -a v0.1.0`（打在发布提交 565ee17）+ push tag；
+  `gh release create v0.1.0`（notes：基准表/快速体验命令/extras 依赖分层/质量门/免责声明）
+- [x] topics（2026-10-02）：8 个（compliance/document-parsing/nlp/operation-ticket/power-systems/python/
+  rule-engine/work-ticket），`gh api` 回读确认生效；description/visibility/MIT license 元信息同回读核验
+- [x] CI 首跑核验（2026-10-02）：main 与 v0.1.0 两次 push 触发，5 矩阵作业（ubuntu 3.8/3.9/3.11/3.13 +
+  windows 3.11）全部 success（本轮 CI 已改装 `.[dev,web,report]`，web/report 测试在 CI 常驻）
 
-## §4 发布后复核（待发布后回填）
+## §4 发布后复核 ✅（2026-10-02）
 
-- [ ] GitHub 全新 clone → 四步审计 + 全量测试 + 基准复跑
-- [ ] `gh repo view` 元信息 / README 渲染核验
-- [ ] plan/00/05/06 回写提交推送
+- [x] GitHub 全新 clone（`potc-gh-verify`，SSH clone 自远端）：HEAD==发布提交 565ee17、工作区零变化
+  （EOL 门在 GitHub 检出同样守住）→ 四步审计 DESSENSITIZE_AUDIT_OK（历史三扫对已发布历史全 0）+
+  205 项测试全绿 + 基准门槛全过 + demo 通过
+- [x] `gh api` 元信息核验：public / MIT / topics 8 个 / description 双语；README 渲染核验
+  （Accept: application/vnd.github.html）：3 表格、演示命令、F1 数值、mermaid 图均正常渲染
+- [x] plan/00/05/06 回写（M6 ✅ + D-1/D-3 落定）+ 本档 §3/§4 回填，随收尾提交推送（正常开发流）
+
+### 收尾提交实测插曲（如实留痕）
+
+首版收尾提交因本档写了 SSH remote 字面 URL（git@ 主机形式触发 email 模式）致脱敏审计 FAIL，
+且因 `审计 | tail` 管道吃退出码而照常提交推送（方法论既录坑再次实测命中，守门测试进 CI 的价值
+当即兑现：该推送的 CI 必红）。处置 = 留档措辞占位化 + amend + `git push --force-with-lease`
+（新仓库无协作者，安全；tag v0.1.0 指向的发布提交不受影响）+ CI 复核。教训：发布链上的长命令
+一律单独跑、直接看退出码，不接管道。
