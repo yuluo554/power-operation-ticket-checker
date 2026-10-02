@@ -1,5 +1,7 @@
 # HANDOFF-M4（M3 收尾交接快照）
 
+> **已过时仅作历史**（M4 已于 2026-10-02 完成，续接请读 [HANDOFF-M5.md](HANDOFF-M5.md)）。
+>
 > 写于 2026-10-02，M3（知识库三层 + 规则引擎全量）收尾。下一里程碑：M4 LLM 兜底 + 基准评测。新对话续接提示词：
 > `/goal 读取 "D:\ProgramData\zcode\power-operation-ticket-checker\plan\HANDOFF-M4.md" 继续完成任务`
 
