@@ -51,6 +51,7 @@ py -X utf8 data/generator/generate.py --force
 python3 -X utf8 -m powerticket demo
 
 # 可选：安装为命令行工具 + 开发依赖
+py -m pip install -U pip    # Python 3.8 自带的旧 pip 不支持 pyproject-only 可编辑安装，先升级
 py -m pip install -e ".[dev]"
 powerticket --help
 ```
