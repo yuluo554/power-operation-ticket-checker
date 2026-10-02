@@ -56,12 +56,125 @@ def test_parse_garbage_friendly(capsys):
     assert "无法识别票种" in captured.err
 
 
-def test_stub_commands_exit_2(capsys):
-    for cmd in (["run"], ["report", str(SAMPLE)], ["web"]):
-        rc = cli.main(cmd)
-        captured = capsys.readouterr()
-        assert rc == 2, cmd
-        assert "尚未实现" in captured.out
+def test_run_single_file_human_output(capsys):
+    rc = cli.main(["run", str(SAMPLE)])
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "票面参数卡" in out
+    assert "== 汇总 ==" in out
+
+
+def test_run_single_file_json(capsys):
+    rc = cli.main(["run", str(SAMPLE), "--json"])
+    out = capsys.readouterr().out
+    assert rc == 0
+    result = json.loads(out)  # --json 输出必须是纯净 JSON
+    assert result["card"]["ticket_type"] == "operating"
+    assert result["summary"] == {"合规": 4, "不合规": 0, "待人工确认": 0}
+
+
+def test_run_single_with_report(capsys, tmp_path):
+    out_docx = tmp_path / "report.docx"
+    rc = cli.main(["run", str(SAMPLE), "--json", "--report", str(out_docx)])
+    captured = capsys.readouterr()
+    assert rc == 0
+    json.loads(captured.out)  # JSON 纯净：报告路径提示走 stderr
+    assert "报告已生成" in captured.err
+    assert out_docx.exists() and out_docx.read_bytes()[:2] == b"PK"
+
+
+def test_run_missing_path(capsys):
+    rc = cli.main(["run", "no_such_dir_or_file"])
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert "路径不存在" in captured.err
+
+
+def test_run_directory_batch(capsys, tmp_path):
+    """目录批量：2 正常 + 1 缺陷全处理；失败 0 → 退出码 0。"""
+    import shutil
+
+    for name in (
+        "gen-operating-001-normal.txt",
+        "gen-operating-004-time-order.txt",
+        "gen-work_first-013-normal.txt",
+    ):
+        shutil.copy(ROOT / "data" / "samples" / "gen" / name, tmp_path / name)
+    rc = cli.main(["run", str(tmp_path)])
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "共 3 份" in out
+    assert "[通过] gen-operating-001-normal.txt" in out
+    assert "[问题] gen-operating-004-time-order.txt" in out and "R-OP-002" in out
+    assert "== 批量汇总 == 共 3 份 ｜ 全部合规 2 ｜ 存在问题 1 ｜ 处理失败 0" in out
+
+
+def test_run_directory_batch_continues_on_error(capsys, tmp_path):
+    """批量中个别票解析失败：继续处理其余票，退出码 1，失败行注明原因。"""
+    import shutil
+
+    shutil.copy(ROOT / "data" / "samples" / "gen" / "gen-operating-001-normal.txt", tmp_path / "good.txt")
+    (tmp_path / "garbage.txt").write_text("无关文本", encoding="utf-8")
+    rc = cli.main(["run", str(tmp_path)])
+    out = capsys.readouterr().out
+    assert rc == 1
+    assert "[失败] garbage.txt" in out and "无法识别票种" in out
+    assert "[通过] good.txt" in out
+    assert "处理失败 1" in out
+
+
+def test_run_directory_json(capsys, tmp_path):
+    import shutil
+
+    shutil.copy(ROOT / "data" / "samples" / "gen" / "gen-operating-001-normal.txt", tmp_path / "a.txt")
+    shutil.copy(ROOT / "data" / "samples" / "gen" / "gen-operating-004-time-order.txt", tmp_path / "b.txt")
+    rc = cli.main(["run", str(tmp_path), "--json"])
+    out = capsys.readouterr().out
+    assert rc == 0
+    payload = json.loads(out)
+    assert payload["mode"] == "directory" and payload["aggregate"]["total"] == 2
+    assert payload["aggregate"]["clean"] == 1 and payload["aggregate"]["with_findings"] == 1
+    by_file = {r["file"]: r for r in payload["results"]}
+    assert by_file["a.txt"]["status"] == "ok" and by_file["a.txt"]["card"]["ticket_type"] == "operating"
+    assert by_file["b.txt"]["summary"]["不合规"] == 1
+
+
+def test_run_directory_with_report_dir(capsys, tmp_path):
+    """目录模式 --report：每票一份 docx 落到报告目录。"""
+    import shutil
+
+    for name in ("gen-operating-001-normal.txt", "gen-operating-004-time-order.txt"):
+        shutil.copy(ROOT / "data" / "samples" / "gen" / name, tmp_path / name)
+    reports = tmp_path / "reports"
+    rc = cli.main(["run", str(tmp_path), "--report", str(reports)])
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "逐票报告目录" in out
+    docx_files = sorted(p.name for p in reports.glob("*.docx"))
+    assert docx_files == [
+        "gen-operating-001-normal.docx",
+        "gen-operating-004-time-order.docx",
+    ]
+
+
+def test_report_cmd_default_out_path(capsys, tmp_path):
+    src = tmp_path / "myticket.txt"
+    src.write_text(SAMPLE.read_text(encoding="utf-8"), encoding="utf-8")
+    rc = cli.main(["report", str(src)])
+    out = capsys.readouterr().out
+    assert rc == 0
+    expected = src.parent / "myticket-审核报告.docx"
+    assert str(expected) in out
+    assert expected.exists()
+
+
+def test_report_cmd_unparseable_friendly(capsys, tmp_path):
+    bad = tmp_path / "bad.txt"
+    bad.write_text("无关文本", encoding="utf-8")
+    rc = cli.main(["report", str(bad)])
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert "校核失败" in captured.err
 
 
 def test_benchmark_runs_and_passes_gates(capsys):

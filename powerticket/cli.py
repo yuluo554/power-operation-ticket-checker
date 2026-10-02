@@ -1,12 +1,14 @@
 """命令行入口：demo / parse / check / run / report / web / benchmark。
 
-子命令按里程碑逐步点亮；未实现的打印计划位置后以退出码 2 返回，不抛裸 traceback。
+core 通路（demo/parse/check/run）零第三方依赖；report/web 懒加载 extras 依赖，
+不可用时打印安装提示以退出码 2 返回，不抛裸 traceback。
 """
 from __future__ import annotations
 
 import argparse
 import json
 import sys
+from datetime import datetime
 from pathlib import Path
 
 from . import __version__
@@ -118,12 +120,187 @@ def _cmd_benchmark(args) -> int:
     return 0 if gates_ok else 1
 
 
-def _not_implemented(title: str, milestone: str, hint: str = ""):
-    def handler(args) -> int:
-        print(f"{title}计划 {milestone} 提供，当前骨架尚未实现。{hint}")
-        return 2
+def _report_meta(source_file: str) -> dict:
+    return {
+        "source_file": source_file,
+        "generated_at": datetime.now().isoformat(timespec="seconds"),
+        "version": __version__,
+    }
 
-    return handler
+
+def _render_report(result: dict, out_path: Path, source_file: str) -> Path:
+    from .report.docx_render import render_docx_report
+
+    return render_docx_report(result, out_path, _report_meta(source_file))
+
+
+def _cmd_run(args) -> int:
+    """run：单票端到端（同 demo 形态）或目录批量 check → 汇总输出（core 零依赖）。"""
+    path = Path(args.file)
+    if path.is_file():
+        return _run_single(path, args)
+    if path.is_dir():
+        return _run_directory(path, args)
+    print(f"路径不存在: {path}", file=sys.stderr)
+    return 2
+
+
+def _run_single(path: Path, args) -> int:
+    try:
+        result = run_pipeline(
+            path.read_text(encoding="utf-8"), allow_llm_fallback=args.llm_fallback
+        )
+    except (ParseError, RuleError) as e:
+        print(f"校核失败: {e}", file=sys.stderr)
+        return 2
+    report_path = None
+    if args.report:
+        out = Path(args.report)
+        if out.is_dir():
+            print(
+                "--report 需为 docx 文件路径（单票模式）；目录模式请对目录运行 run",
+                file=sys.stderr,
+            )
+            return 2
+        try:
+            report_path = _render_report(result, out, path.name)
+        except Exception as e:
+            print(_report_error_text(e), file=sys.stderr)
+            return 2
+    if args.json:
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        if report_path is not None:
+            print(f"报告已生成: {report_path}", file=sys.stderr)
+    else:
+        _print_pipeline(result)
+        if report_path is not None:
+            print(f"报告已生成: {report_path}")
+    return 0
+
+
+def _run_directory(path: Path, args) -> int:
+    files = sorted(path.glob("*.txt"))
+    if not files:
+        print(f"目录下没有 .txt 票据: {path}", file=sys.stderr)
+        return 2
+    report_dir = None
+    if args.report:
+        report_dir = Path(args.report)
+        if report_dir.is_file():
+            print("--report 在目录模式下需为目录路径（每票一份 docx）", file=sys.stderr)
+            return 2
+        # 批量开始前先探测报告依赖，避免处理到一半失败
+        try:
+            from .report.docx_render import ensure_docx_available
+
+            ensure_docx_available()
+        except Exception as e:
+            print(_report_error_text(e), file=sys.stderr)
+            return 2
+
+    records = []
+    for f in files:
+        try:
+            result = run_pipeline(
+                f.read_text(encoding="utf-8"), allow_llm_fallback=args.llm_fallback
+            )
+        except (ParseError, RuleError) as e:
+            records.append({"file": f.name, "status": "error", "error": str(e)})
+            continue
+        records.append({"file": f.name, "status": "ok", **result})
+        if report_dir is not None:
+            try:
+                _render_report(result, report_dir / f"{f.stem}.docx", f.name)
+            except Exception as e:
+                print(_report_error_text(e), file=sys.stderr)
+                return 2
+
+    clean = sum(
+        1
+        for r in records
+        if r["status"] == "ok"
+        and r["summary"]["不合规"] == 0
+        and r["summary"]["待人工确认"] == 0
+    )
+    failed = sum(1 for r in records if r["status"] == "error")
+    aggregate = {
+        "total": len(files),
+        "clean": clean,
+        "with_findings": len(records) - clean - failed,
+        "failed": failed,
+    }
+    if args.json:
+        print(
+            json.dumps(
+                {"mode": "directory", "directory": str(path), "aggregate": aggregate, "results": records},
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
+    else:
+        print(f"== 目录批量审核（{path}，共 {len(files)} 份）==")
+        for r in records:
+            if r["status"] == "error":
+                print(f"[失败] {r['file']} ｜ {r['error']}")
+                continue
+            s = r["summary"]
+            non_pass = [c["rule_id"] for c in r["conclusions"] if c["verdict"] != "合规"]
+            mark = "通过" if not non_pass else "问题"
+            print(
+                f"[{mark}] {r['file']} ｜ {r['card']['ticket_type']} ｜"
+                f" 合规 {s['合规']} / 不合规 {s['不合规']} / 待人工确认 {s['待人工确认']}"
+                + (f" ｜ {'、'.join(non_pass)}" if non_pass else "")
+            )
+        print(
+            f"== 批量汇总 == 共 {aggregate['total']} 份 ｜ 全部合规 {clean}"
+            f" ｜ 存在问题 {aggregate['with_findings']} ｜ 处理失败 {failed}"
+        )
+        if report_dir is not None:
+            print(f"逐票报告目录: {report_dir.resolve()}")
+    return 1 if failed else 0
+
+
+def _report_error_text(e: Exception) -> str:
+    from .report import ReportUnavailable
+
+    if isinstance(e, ReportUnavailable):
+        return str(e)
+    return f"报告生成失败: {e}"
+
+
+def _cmd_report(args) -> int:
+    try:
+        result = run_pipeline(
+            _read_ticket(args.file), allow_llm_fallback=args.llm_fallback
+        )
+    except (ParseError, RuleError) as e:
+        print(f"校核失败: {e}", file=sys.stderr)
+        return 2
+    src = Path(args.file)
+    out = Path(args.out) if args.out else src.parent / f"{src.stem}-审核报告.docx"
+    try:
+        report_path = _render_report(result, out, src.name)
+    except Exception as e:
+        print(_report_error_text(e), file=sys.stderr)
+        return 2
+    print(f"报告已生成: {report_path.resolve()}")
+    return 0
+
+
+def _cmd_web(args) -> int:
+    try:
+        import uvicorn
+
+        from .web.app import create_app
+    except ImportError as e:
+        print(
+            f"Web 面板不可用（{e}）。依赖安装：py -m pip install -e .[web]",
+            file=sys.stderr,
+        )
+        return 2
+    print(f"Web 面板启动: http://{args.host}:{args.port}（Ctrl+C 退出）")
+    uvicorn.run(create_app(), host=args.host, port=args.port, log_level="info")
+    return 0
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -159,15 +336,39 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--json", action="store_true", help="以 JSON 输出原始指标")
     p.set_defaults(func=_cmd_benchmark)
 
-    for cmd, title, ms, hint, with_file in (
-        ("run", "多票端到端与目录模式", "M5", "先用 demo/parse/check 体验骨架能力。", True),
-        ("report", "docx 报告导出", "M5", "", True),
-        ("web", "Web 审核面板", "M5", "", False),
-    ):
-        p = sub.add_parser(cmd, help=f"{title}（{ms} 提供）")
-        if with_file:
-            p.add_argument("file", nargs="?", help="票据文本文件路径")
-        p.set_defaults(func=_not_implemented(title, ms, hint))
+    p = sub.add_parser(
+        "run", help="端到端审核：单票明细或目录批量（汇总输出，core 零依赖）"
+    )
+    p.add_argument("file", help="票据文本文件或票据目录")
+    p.add_argument("--json", action="store_true", help="以 JSON 输出（非 JSON 提示走 stderr）")
+    p.add_argument(
+        "--report",
+        default=None,
+        help="同时导出 docx 报告：单票模式为文件路径；目录模式为目录（每票一份）",
+    )
+    p.add_argument(
+        "--llm-fallback",
+        action="store_true",
+        help="规则解析失败时尝试 LLM 兜底（需安装 .[llm] 并配置 DASHSCOPE_API_KEY；不可用自动降级纯规则通路）",
+    )
+    p.set_defaults(func=_cmd_run)
+
+    p = sub.add_parser("report", help="单票 docx 审核报告导出（需 .[report]）")
+    p.add_argument("file", help="票据文本文件路径")
+    p.add_argument(
+        "--out", default=None, help="输出 docx 路径（默认与票据同目录 <票名>-审核报告.docx）"
+    )
+    p.add_argument(
+        "--llm-fallback",
+        action="store_true",
+        help="规则解析失败时尝试 LLM 兜底（需安装 .[llm] 并配置 DASHSCOPE_API_KEY；不可用自动降级纯规则通路）",
+    )
+    p.set_defaults(func=_cmd_report)
+
+    p = sub.add_parser("web", help="启动 Web 审核面板（FastAPI，需 .[web]）")
+    p.add_argument("--host", default="127.0.0.1", help="监听地址（默认 127.0.0.1）")
+    p.add_argument("--port", type=int, default=8000, help="监听端口（默认 8000）")
+    p.set_defaults(func=_cmd_web)
 
     return parser
 

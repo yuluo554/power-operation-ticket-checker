@@ -1,5 +1,7 @@
 # HANDOFF-M5（M4 收尾交接快照）
 
+> **已过时仅作历史**（M5 已于 2026-10-02 完成，续接请读 [HANDOFF-M6.md](HANDOFF-M6.md)）。
+>
 > 写于 2026-10-02，M4（基准评测 + LLM 兜底）收尾。下一里程碑：M5 编排与交付（CLI run + docx 报告 + Web 面板）。新对话续接提示词：
 > `/goal 读取 "D:\ProgramData\zcode\power-operation-ticket-checker\plan\HANDOFF-M5.md" 继续完成任务`
 

@@ -2,7 +2,7 @@
 
 电力"两票"（工作票/操作票）智能审核与合规校核系统 —— **规则优先 · 依据挂链 · 基准可复现**。
 
-> 状态：🚧 **M4 完成（规则引擎全量 + 内置基准 + LLM 兜底，2026-10-02）**。7 票种全部解析为参数卡并经 35 份带真值样例全集精确对账；39 条规则全 7 类 check_type、依据挂链知识库三层；基准 F1 1.0 / 误报 0；报告/Web 按里程碑推进。
+> 状态：🚧 **M5 完成（编排与交付：CLI run 批量 + docx 报告 + Web 面板，2026-10-02）**。7 票种全部解析为参数卡并经 35 份带真值样例全集精确对账；39 条规则全 7 类 check_type、依据挂链知识库三层；基准 F1 1.0 / 误报 0；报告无外链、Web 页面 0 外链断网可演示。
 
 ## 这是什么
 
@@ -37,8 +37,12 @@ flowchart LR
 # Windows（开发环境实测）
 py -X utf8 -m powerticket demo          # 内置样例端到端：解析 → 校核 → 控制台报告
 py -X utf8 -m powerticket check data/samples/sample-operating-01.txt   # 参数卡+结论 JSON
+py -X utf8 -m powerticket run data/samples/gen          # 目录批量审核：逐票结论+批量汇总
+py -X utf8 -m powerticket run <票据或目录> --report <docx路径/目录>      # 审核同时导出 docx 报告
+py -X utf8 -m powerticket report <票据>.txt             # 单票 docx 审核报告（需 .[report]）
+py -X utf8 -m powerticket web                           # Web 审核面板 http://127.0.0.1:8000（需 .[web]）
 py -X utf8 -m powerticket benchmark     # 内置基准：解析 F1 / 检出率 / 误报率（零 API 依赖）
-py -X utf8 -m pytest                    # 测试（174 项，全离线）
+py -X utf8 -m pytest                    # 测试（203 项，全离线）
 
 # 重新生成内置带真值评测集（固定 seed 位级一致，详见 data/generator/README.md）
 py -X utf8 data/generator/generate.py --force
@@ -51,7 +55,7 @@ py -m pip install -e ".[dev]"
 powerticket --help
 ```
 
-当前实现范围：**7 票种全部解析**（操作票含发令人与操作序列，工作票含计划时间双拆/许可/终结/签发/许可人与安全措施条目，抢修单含许可人与安全措施条目）+ **39 条正式规则全 7 类 check_type**（required_field / time_order / process_signature / ticket_type_match / measure_coverage / five_prevention / consistency，依据挂链知识库三层：官方 PDF/登记卡 → 条文块 → 规则库）+ **内置基准**（35 份带真值样例，字段级 F1 与端到端检出/误报，零 API 可复现）+ **LLM 兜底抽取**（可选，DashScope qwen，断供自动降级纯规则通路）。`report`/`web` 子命令已就位，调用时提示计划里程碑（M5）。
+当前实现范围：**7 票种全部解析**（操作票含发令人与操作序列，工作票含计划时间双拆/许可/终结/签发/许可人与安全措施条目，抢修单含许可人与安全措施条目）+ **39 条正式规则全 7 类 check_type**（required_field / time_order / process_signature / ticket_type_match / measure_coverage / five_prevention / consistency，依据挂链知识库三层：官方 PDF/登记卡 → 条文块 → 规则库）+ **内置基准**（35 份带真值样例，字段级 F1 与端到端检出/误报，零 API 可复现）+ **LLM 兜底抽取**（可选，DashScope qwen，断供自动降级纯规则通路）+ **编排与交付**（目录批量审核、docx 审核报告、Web 面板）。
 
 ## 路线图
 
@@ -62,7 +66,7 @@ powerticket --help
 | M2 | 解析层：7 票种 → 参数卡，回归测试 | ✅ |
 | M3 | 规范知识库三层 + 规则引擎全量（类目门控、依据关联） | ✅ |
 | M4 | LLM 兜底（防幻觉三件套）+ 内置基准 | ✅ |
-| M5 | CLI run + docx 报告 + Web 面板（0 外链） | ⬜ |
+| M5 | CLI run + docx 报告 + Web 面板（0 外链） | ✅ |
 | M6 | 干净环境验证 + 脱敏发布 GitHub | ⬜ |
 
 ## 内置基准（M4 达成）
@@ -104,6 +108,24 @@ py -X utf8 -m powerticket check <票据>.txt --llm-fallback
 ```
 
 模型/接入点/超时可用环境变量覆盖：`POWERTICKET_LLM_MODEL`（默认 qwen-plus）、`POWERTICKET_LLM_BASE_URL`、`POWERTICKET_LLM_TIMEOUT`（默认 30 秒）。
+
+## 编排与交付（M5 达成）
+
+**目录批量审核**（core 零依赖，处理失败不中断整批，存在失败退出码 1）：
+
+```bash
+py -X utf8 -m powerticket run data/samples/gen            # 35 份样例逐票结论 + 批量汇总
+py -X utf8 -m powerticket run data/samples/gen --json     # 机器可读（含逐票完整结果与 aggregate）
+py -X utf8 -m powerticket run data/samples/gen --report reports/   # 每票一份 docx 落报告目录
+```
+
+**docx 审核报告**（extras[report]，`pip install -e ".[report]"`）：章节为元信息 → 一、结论汇总 → 二、分级问题清单（按重大/较大/一般/低风险）→ 三、逐条证据（含原文摘录，取参数卡证据链逐字）→ 四、整改建议 → 五、待人工确认（独立成节）→ 六、签署栏。**报告无外链**：不写 URL/超链接，判据 `powerticket.report.find_external_links`（超链接元素 / External 关系 / 正文 http(s)://）测试锁定。
+
+**Web 审核面板**（extras[web]，`pip install -e ".[web]"`）：上传 → 参数卡 → 校核结论 → 报告预览与 docx 导出（预览与 docx 共用同一章节结构，预览即所得）。前端为零依赖内联单页，**页面 0 外链**断网可演示（无任何外部资源引用，/docs、/redoc 已关闭）：
+
+```bash
+py -X utf8 -m powerticket web              # http://127.0.0.1:8000（--host/--port 可改）
+```
 
 ## 依赖分层
 
