@@ -67,8 +67,9 @@ DESSENSITIZE_AUDIT_OK
 
 ## §3 GitHub 公开（待发布后回填）
 
-- [ ] 用户确认（2026-10-02 提问）：账号 yuluo554、公开仓库 power-operation-ticket-checker、
-  tag v0.1.0 + release + topics、提交邮箱改写 noreply 并重写历史（决策 D-3：发布前需用户确认）
+- [x] 用户确认（2026-10-02，对话内三问三答）：公开仓库 yuluo554/power-operation-ticket-checker（MIT 随仓）、
+  提交邮箱全历史改写 GitHub noreply（12 提交，filter-branch env-filter + reflog expire + gc aggressive，
+  改写后旧邮箱字面值 log -p/提交信息 0 残留，审计/205 测试复跑全绿）、tag v0.1.0 + release + topics 全部执行
 - [ ] 建仓+推送
 - [ ] tag + release
 - [ ] topics
