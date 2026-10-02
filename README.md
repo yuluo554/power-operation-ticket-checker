@@ -135,7 +135,7 @@ py -X utf8 -m powerticket web              # http://127.0.0.1:8000（--host/--po
 | `.[web]` | Web 面板（fastapi/uvicorn/python-multipart） |
 | `.[report]` | docx 报告（python-docx） |
 | `.[llm]` | LLM 兜底（openai 兼容接口） |
-| `.[dev]` | 开发测试（pytest） |
+| `.[dev]` | 开发测试（pytest、httpx——TestClient 冒烟） |
 
 ## 目录结构
 

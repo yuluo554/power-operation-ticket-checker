@@ -22,14 +22,14 @@ classifiers = [
     "Natural Language :: Chinese (Simplified)",
     "Topic :: Scientific/Engineering",
 ]
-# 依赖分层（plan/03 §3）：core 零三方依赖；extras 必须覆盖运行期真实 import
+# 依赖分层（plan/03 §3）：core 零三方依赖；extras 必须覆盖运行期与测试期真实 import
 dependencies = []
 
 [project.optional-dependencies]
 web = ["fastapi>=0.100", "uvicorn>=0.20", "python-multipart>=0.0.5"]
 report = ["python-docx>=0.8.11"]
 llm = ["openai>=1.0"]
-dev = ["pytest>=7"]
+dev = ["pytest>=7", "httpx>=0.24"]
 
 [project.scripts]
 powerticket = "powerticket.cli:main"
