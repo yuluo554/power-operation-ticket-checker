@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "power-operation-ticket-checker"
-version = "0.1.0"
+version = "0.2.0"
 description = "电力'两票'（工作票/操作票）智能审核与合规校核系统：规则优先、依据挂链、基准可复现"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -34,6 +34,20 @@ powerticket = "powerticket.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["powerticket*"]
+
+# 数据随包分发（2026-10-22 v0.2.0 修打包）：
+# 规则库/样例/模板/知识库原先只在源码树里，装成 wheel 后 powerticket 找不到 data/，
+# `demo` 直接报「文件不存在: .../site-packages/data/samples/...」。
+# 用 data-files 装到 <prefix>/share/powerticket/（而非 package-data —— data/ 不在包目录下），
+# 由 powerticket/paths.py 统一解析：env var → 源码态 → <prefix>/share/powerticket。
+[tool.setuptools.data-files]
+"share/powerticket/knowledge/raw" = ["data/knowledge/raw/*.json", "data/knowledge/raw/*.pdf"]
+"share/powerticket/knowledge/rules" = ["data/knowledge/rules/*.json"]
+"share/powerticket/knowledge/chunks" = ["data/knowledge/chunks/*.json"]
+"share/powerticket/samples" = ["data/samples/*.txt"]
+"share/powerticket/samples/gen" = ["data/samples/gen/*.txt", "data/samples/gen/*.json"]
+"share/powerticket/ticket_templates" = ["data/ticket_templates/*.txt", "data/ticket_templates/*.json", "data/ticket_templates/*.md"]
+"share/powerticket/generator" = ["data/generator/*.py", "data/generator/*.json", "data/generator/*.md"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

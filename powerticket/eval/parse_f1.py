@@ -18,11 +18,11 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
+from .. import paths
 from ..models import TicketCard
 from ..parse import parse_ticket
 
-_REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_SAMPLES_DIR = _REPO_ROOT / "data" / "samples" / "gen"
+DEFAULT_SAMPLES_DIR = paths.sub("samples", "gen")
 
 # 备注栏为虚构声明，不入真值（truth semantics_note；与 test_data_generator 同口径）
 EXTRACTED_BUT_UNTRUTHED = frozenset({"remarks"})

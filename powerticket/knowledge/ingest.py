@@ -16,9 +16,10 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, List
 
-_REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_RAW_DIR = _REPO_ROOT / "data" / "knowledge" / "raw"
-DEFAULT_OUT = _REPO_ROOT / "data" / "knowledge" / "chunks" / "chunks.json"
+from .. import paths
+
+DEFAULT_RAW_DIR = paths.sub("knowledge", "raw")
+DEFAULT_OUT = paths.sub("knowledge", "chunks", "chunks.json")
 
 CHUNKS_SCHEMA = "powerticket-knowledge-chunks/0.1"
 _STATUSES = ("已核对", "待核对")

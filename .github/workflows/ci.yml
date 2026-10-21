@@ -30,3 +30,59 @@ jobs:
       - name: Sample reproducibility gate
         # 位级复现门：样例集必须能由 generate.py 逐字节重建（不写盘，只对账）
         run: python -X utf8 data/generator/generate.py --check
+
+  # 发布物自足性：源码态与 editable 态都是绿的时候，wheel 里可能根本没有 data/。
+  # 2026-10-22 v0.2.0 实测过：装 wheel 后 demo 直接报「文件不存在」。
+  # 这个作业必须 **不装 -e**，装真 wheel，并在仓库外的中立目录里跑业务命令。
+  packaging:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, python: "3.12" }
+          - { os: windows-latest, python: "3.12" }
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Build wheel and sdist
+        run: |
+          python -m pip install --upgrade pip build
+          python -m build --outdir "${{ runner.temp }}/dist"
+      - name: Install wheel (NOT editable) into a fresh venv
+        shell: bash
+        run: |
+          python -m venv "${{ runner.temp }}/venv-wheel"
+          PY="${{ runner.temp }}/venv-wheel/bin/python"
+          if [ ! -x "$PY" ]; then PY="${{ runner.temp }}/venv-wheel/Scripts/python.exe"; fi
+          "$PY" -m pip install --upgrade pip
+          "$PY" -m pip install "${{ runner.temp }}"/dist/*.whl
+          "$PY" -m pip install pytest httpx python-docx fastapi uvicorn python-multipart
+          echo "PY=$PY" >> "$GITHUB_ENV"
+      - name: Business commands from an installed wheel (neutral CWD)
+        shell: bash
+        # 关键：CWD 在仓库之外，且不设 PYTHONPATH —— 确保不是靠源码树里的 data/ 蒙混过关。
+        # （在 checkout 目录里跑 pytest 是不行的：github.workspace 会进 sys.path，
+        #  `import powerticket` 命中的是仓库源码树，等于又用源码态验装态。）
+        run: |
+          mkdir -p "${{ runner.temp }}/neutral" && cd "${{ runner.temp }}/neutral"
+          unset PYTHONPATH
+          # 断言都走 pathlib，避免在 bash 里和反斜杠转义搏斗
+          "$PY" -X utf8 -c "import pathlib, powerticket; p = pathlib.Path(powerticket.__file__); print('powerticket at', p); assert 'site-packages' in p.parts, p"
+          "$PY" -X utf8 -c "import pathlib; from powerticket import paths; d = paths.data_dir(); print('data_dir', d); assert d.is_dir(), d; assert 'share' in pathlib.Path(d).parts, d"
+          "$PY" -X utf8 -m powerticket demo > demo.out 2>&1 || { cat demo.out; exit 1; }
+          "$PY" -X utf8 -m powerticket benchmark > bench.out 2>&1 || { cat bench.out; exit 1; }
+          "$PY" -X utf8 -m powerticket.knowledge.ingest --check
+          grep -q "基准门槛" bench.out && echo "BENCH_OK"
+          grep -q "汇总" demo.out && echo "DEMO_OK"
+      - name: Sdist must also carry data (unpack and check)
+        shell: bash
+        run: |
+          cd "${{ runner.temp }}"
+          mkdir -p sdist-check && tar -xzf dist/*.tar.gz -C sdist-check
+          F=$(find sdist-check -name "generate.py" -path "*data/generator*" | head -1)
+          test -n "$F" || { echo "::error::sdist 里没有 data/generator/generate.py"; exit 1; }
+          test -d "$(dirname "$(dirname "$F")")/knowledge/rules" || { echo "::error::sdist 里没有 data/knowledge/rules"; exit 1; }
+          echo "SDIST_DATA_OK"

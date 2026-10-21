@@ -18,11 +18,11 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, List
 
+from .. import paths
 from ..parse import parse_ticket
 from ..rules import load_rules, run_checks
 
-_REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_SAMPLES_DIR = _REPO_ROOT / "data" / "samples" / "gen"
+DEFAULT_SAMPLES_DIR = paths.sub("samples", "gen")
 
 FP_GATE = 0  # 误报样例数门槛：0
 

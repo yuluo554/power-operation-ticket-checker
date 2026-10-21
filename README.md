@@ -2,9 +2,11 @@
 
 电力"两票"（工作票/操作票）智能审核与合规校核系统 —— **规则优先 · 依据挂链 · 基准可复现**。
 
-> 状态：✅ **M6 完成（干净环境验证 + 脱敏发布 GitHub，2026-10-02）**。7 票种全部解析为参数卡并经 35 份带真值样例全集精确对账；39 条规则全 7 类 check_type、依据挂链知识库三层；基准 F1 1.0 / 误报 0；报告无外链、Web 页面 0 外链断网可演示；脱敏四步+终验三扫全 0、干净环境（新 clone+新 venv）按 README 一次跑通。
+> 状态：✅ **v0.2.0（2026-10-22）**。7 票种全部解析为参数卡并经 35 份带真值样例全集精确对账；39 条规则全 7 类 check_type、依据挂链知识库三层；基准 F1 1.0 / 误报 0；报告无外链、Web 页面 0 外链断网可演示；脱敏四步+终验三扫全 0、干净环境（新 clone+新 venv）按 README 一次跑通，测试 223 项全绿。
 >
 > ⚠ **39 条规则中 30 条（77%）依据待核对**——它们的「不合规」结论一律降级为「待人工确认」；真实可确定性判定的只有 9 条规则覆盖的范围。详见 [§限制与免责声明](#限制与免责声明)。
+>
+> 变更历史见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 这是什么
 
@@ -44,7 +46,7 @@ py -X utf8 -m powerticket run <票据或目录> --report <docx路径/目录>    
 py -X utf8 -m powerticket report <票据>.txt             # 单票 docx 审核报告（需 .[report]）
 py -X utf8 -m powerticket web                           # Web 审核面板 http://127.0.0.1:8000（需 .[web]）
 py -X utf8 -m powerticket benchmark     # 内置基准：解析 F1 / 检出率 / 误报率（零 API 依赖）
-py -X utf8 -m pytest                    # 测试（217 项，全离线）
+py -X utf8 -m pytest                    # 测试（223 项，全离线）
 
 # 重新生成内置带真值评测集（固定 seed 位级一致，详见 data/generator/README.md）
 py -X utf8 data/generator/generate.py --force
@@ -61,6 +63,23 @@ powerticket --help
 
 > **退出码纪律**：判定退出码时不要加管道（`| head` / `| tail` 会把后者的 0 当成命令的退出码）。本仓各命令的错误退出码是 2（解析/规则错误、extras 缺失），基准门槛未过是 1。
 
+**从发布包安装**（`pip install power_operation_ticket_checker-*.whl`）时，规则库/样例/模板/知识库会装到 `<prefix>/share/powerticket/`（wheel 与 sdist 都带数据）；`powerticket.paths.data_dir()` 自动解析，无需配置。三种解析形态的优先级：
+
+| 优先级 | 来源 | 适用 |
+|---|---|---|
+| 1 | 环境变量 `POWERTICKET_DATA_DIR` | 容器 / 共享盘 / 自备数据 |
+| 2 | 源码树 `./data`（上溯找 `data/knowledge/rules`） | `git clone` 后直接 `py -m powerticket`，或 `pip install -e .` |
+| 3 | `<prefix>/share/powerticket/` | 常规 `pip install <wheel>` |
+
+```
+$ pip install power_operation_ticket_checker-0.2.0-py3-none-any.whl
+$ python -X utf8 -c "from powerticket import paths; print(paths.data_dir())"
+...\Lib\share\powerticket
+$ python -X utf8 -m powerticket demo        # 装完即可跑，不需仓库
+```
+
+装态自足性由 CI 的 `packaging` 作业守住（真装 wheel + 中立目录跑 `demo`/`benchmark`/`ingest --check`），本地由 `tests/test_packaging.py` 守静态面。
+
 当前实现范围：**7 票种全部解析**（操作票含发令人与操作序列，工作票含计划时间双拆/许可/终结/签发/许可人与安全措施条目，抢修单含许可人与安全措施条目）+ **39 条正式规则全 7 类 check_type**（required_field / time_order / process_signature / ticket_type_match / measure_coverage / five_prevention / consistency，依据挂链知识库三层：官方 PDF/登记卡 → 条文块 → 规则库）+ **内置基准**（35 份带真值样例，字段级 F1 与端到端检出/误报，零 API 可复现）+ **LLM 兜底抽取**（可选，DashScope qwen，断供自动降级纯规则通路）+ **编排与交付**（目录批量审核、docx 审核报告、Web 面板）。
 
 ## 路线图
@@ -73,7 +92,8 @@ powerticket --help
 | M3 | 规范知识库三层 + 规则引擎全量（类目门控、依据关联） | ✅ |
 | M4 | LLM 兜底（防幻觉三件套）+ 内置基准 | ✅ |
 | M5 | CLI run + docx 报告 + Web 面板（0 外链） | ✅ |
-| M6 | 干净环境验证 + 脱敏发布 GitHub | ✅ |
+| M6 | 干净环境验证 + 脱敏发布 GitHub | ✅ 2026-10-02（v0.1.0） |
+| 二次迭代 | 依据闸（status 参与判定）+ 脱敏门自证 + 复核锚 + 版本单源守门 + 生成器对账 + floor 3.12 | ✅ 2026-10-22（v0.2.0） |
 
 ## 内置基准（M4 达成）
 

@@ -11,14 +11,13 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from . import __version__
+from . import __version__, paths
 from .llm.fallback import parse_ticket_with_fallback
 from .parse import ParseError
 from .pipeline import run_pipeline
 from .rules import RuleError
 
-_REPO_ROOT = Path(__file__).resolve().parents[1]
-_DEMO_SAMPLE = _REPO_ROOT / "data" / "samples" / "sample-operating-01.txt"
+_DEMO_SAMPLE = paths.sub("samples", "sample-operating-01.txt")
 
 
 def _ensure_utf8_stdio() -> None:

@@ -8,11 +8,11 @@ import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from .. import paths
 from ..models import VERDICT_MANUAL, VERDICT_VIOLATION, Conclusion, TicketCard
 from . import checks
 
-_REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_RULES_PATH = _REPO_ROOT / "data" / "knowledge" / "rules"
+DEFAULT_RULES_PATH = paths.sub("knowledge", "rules")
 
 CHECKS: Dict[str, Any] = {
     "required_field": checks.check_required_field,

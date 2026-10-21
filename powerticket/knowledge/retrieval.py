@@ -13,8 +13,9 @@ import re
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-_REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_CHUNKS_PATH = _REPO_ROOT / "data" / "knowledge" / "chunks" / "chunks.json"
+from .. import paths
+
+DEFAULT_CHUNKS_PATH = paths.sub("knowledge", "chunks", "chunks.json")
 
 _ASCII_TOKEN_RE = re.compile(r"[a-zA-Z0-9]+")
 _HAN_RE = re.compile(r"[一-鿿]+")
