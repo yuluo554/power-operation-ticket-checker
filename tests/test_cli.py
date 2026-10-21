@@ -136,7 +136,12 @@ def test_run_directory_json(capsys, tmp_path):
     assert payload["aggregate"]["clean"] == 1 and payload["aggregate"]["with_findings"] == 1
     by_file = {r["file"]: r for r in payload["results"]}
     assert by_file["a.txt"]["status"] == "ok" and by_file["a.txt"]["card"]["ticket_type"] == "operating"
-    assert by_file["b.txt"]["summary"]["不合规"] == 1
+    # b.txt 的时间倒挂由 R-OP-002 判出，该规则 basis.status 为「待核对」→ 依据闸降级为「待人工确认」
+    # （plan/04:70/100 口径；闸门本身由 tests/test_pending_gate.py 双对照锁定）
+    assert by_file["b.txt"]["summary"]["不合规"] == 0
+    assert by_file["b.txt"]["summary"]["待人工确认"] == 1
+    b_conclusions = {c["rule_id"]: c["verdict"] for c in by_file["b.txt"]["conclusions"]}
+    assert b_conclusions["R-OP-002"] == "待人工确认"
 
 
 def test_run_directory_with_report_dir(capsys, tmp_path):

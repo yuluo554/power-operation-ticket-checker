@@ -634,6 +634,40 @@ def build_all(seed: int = DEFAULT_SEED) -> Dict[str, str]:
     return files
 
 
+def check_against(out: Path, files: Dict[str, str]) -> int:
+    """与已提交样例集逐字节对账（不写盘）。一致 → GEN_CHECK_OK，不一致 → 列差异 + rc 1。
+
+    位级复现口径：生成结果按 UTF-8 + LF 编码后与磁盘字节逐文件比较；
+    目录里多出的文件（不在本次生成集内）同样算差异——否则「样例集被手工加文件」
+    这种漂移会被漏掉。
+    """
+    if not out.is_dir():
+        print(f"GEN_CHECK_FAIL 样例目录不存在: {out}", file=sys.stderr)
+        return 1
+    expected = {name: content.encode("utf-8") for name, content in files.items()}
+    actual = {}
+    for p in sorted(out.iterdir()):
+        if p.is_file():
+            actual[p.name] = p.read_bytes()
+
+    diffs: List[str] = []
+    for name in sorted(expected):
+        if name not in actual:
+            diffs.append(f"缺失: {name}")
+        elif actual[name] != expected[name]:
+            diffs.append(f"字节不一致: {name}（磁盘 {len(actual[name])} B / 生成 {len(expected[name])} B）")
+    for name in sorted(set(actual) - set(expected)):
+        diffs.append(f"多余: {name}")
+
+    if diffs:
+        print(f"GEN_CHECK_FAIL 与生成结果不一致 {len(diffs)} 处：", file=sys.stderr)
+        for d in diffs[:20]:
+            print(f"  {d}", file=sys.stderr)
+        return 1
+    print(f"GEN_CHECK_OK {len(expected)} 个产物逐字节一致")
+    return 0
+
+
 def main(argv: Optional[List[str]] = None) -> int:
     parser = argparse.ArgumentParser(
         prog="generate.py",
@@ -643,6 +677,11 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--seed", type=int, default=DEFAULT_SEED, help="随机种子（默认 20261002）")
     parser.add_argument("--force", action="store_true", help="清空输出目录后重新生成（先清旧行）")
     parser.add_argument("--dry-run", action="store_true", help="只打印生成文件清单，不写文件")
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="与已提交的样例集逐字节对账（不写盘）；一致输出 GEN_CHECK_OK，不一致列差异并 rc 1",
+    )
     args = parser.parse_args(argv)
 
     try:
@@ -652,6 +691,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         return 2
 
     out = Path(args.out)
+    if args.check:
+        return check_against(out, files)
     if args.dry_run:
         for name in sorted(files):
             print(name)

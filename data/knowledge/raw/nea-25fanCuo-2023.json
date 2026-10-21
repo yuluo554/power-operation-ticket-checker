@@ -53,5 +53,8 @@
       "status": "已核对",
       "channel": "国家能源局官网原文PDF（第34页），2026-10-02 逐字提取"
     }
-  ]
+  ],
+  "reviewed_at": "2026-10-02",
+  "next_review": "2027-10-02",
+  "review_interval": "annual"
 }

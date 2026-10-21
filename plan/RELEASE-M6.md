@@ -35,6 +35,8 @@
 ## §2 脱敏四步 + 终验三扫 ✅
 
 固化脚本：`scripts/dessensitize_audit.py`（守门测试 `tests/test_release_audit.py` 随全量测试与 CI）。
+
+> **订正（2026-10-22 二次迭代）**：该脚本名拼写有误（三个 s），已 `git mv` 为 `scripts/desensitize_audit.py`，并新增 `--selftest` 阳性/阴性双对照（见 `plan/05` M6 行后记与本仓 `update/03-执行记录.md`）。上文历史原文保留不改。
 终态运行结论（2026-10-02）：
 
 ```

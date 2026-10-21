@@ -5,6 +5,8 @@
 - 报告预览/导出复用 report 包：预览与 docx 同一章节结构（sections.py）；
 - 前端为内联单页 static/index.html，零外部资源引用（页面 0 外链断言进测试），
   /docs、/redoc（Swagger UI 会引 CDN）显式关闭，保证断网可演示。
+- **/openapi.json 保留**（2026-10-22 二次迭代明确）：它是纯 JSON 描述、无外部资源，
+  断网可演示不受影响；保留便于脚本化调用与客户端生成。README §Web 面板已同步声明。
 """
 from __future__ import annotations
 
@@ -41,6 +43,8 @@ def create_app() -> FastAPI:
         version=__version__,
         docs_url=None,  # Swagger UI 引 CDN，与 0 外链纪律冲突，显式关闭
         redoc_url=None,
+        # openapi_url 保持默认（/openapi.json）：纯 JSON 描述、无外部资源，
+        # 断网可演示不受影响；保留便于脚本化调用。README §Web 面板已声明。
     )
 
     @app.get("/", response_class=HTMLResponse)

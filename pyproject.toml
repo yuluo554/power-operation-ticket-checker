@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,16 +7,14 @@ name = "power-operation-ticket-checker"
 version = "0.1.0"
 description = "电力'两票'（工作票/操作票）智能审核与合规校核系统：规则优先、依据挂链、基准可复现"
 readme = "README.md"
-requires-python = ">=3.8"
-license = { text = "MIT" }
+requires-python = ">=3.12"
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [{ name = "yuluo554" }]
 keywords = ["power", "safety", "work-ticket", "operation-ticket", "compliance", "nlp"]
 classifiers = [
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Operating System :: OS Independent",
     "Natural Language :: Chinese (Simplified)",
@@ -39,4 +37,6 @@ include = ["powerticket*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-q"
+# 不要在这里放 "-q"：命令行再加 -q 会叠加成 -qq，把 pytest 的「N passed」汇总行整行吞掉
+# （2026-10-22 二次迭代踩过）。这里只关掉 cacheprovider，避免仓库里留 .pytest_cache。
+addopts = "-p no:cacheprovider"

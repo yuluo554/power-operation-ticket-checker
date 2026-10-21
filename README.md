@@ -3,6 +3,8 @@
 电力"两票"（工作票/操作票）智能审核与合规校核系统 —— **规则优先 · 依据挂链 · 基准可复现**。
 
 > 状态：✅ **M6 完成（干净环境验证 + 脱敏发布 GitHub，2026-10-02）**。7 票种全部解析为参数卡并经 35 份带真值样例全集精确对账；39 条规则全 7 类 check_type、依据挂链知识库三层；基准 F1 1.0 / 误报 0；报告无外链、Web 页面 0 外链断网可演示；脱敏四步+终验三扫全 0、干净环境（新 clone+新 venv）按 README 一次跑通。
+>
+> ⚠ **39 条规则中 30 条（77%）依据待核对**——它们的「不合规」结论一律降级为「待人工确认」；真实可确定性判定的只有 9 条规则覆盖的范围。详见 [§限制与免责声明](#限制与免责声明)。
 
 ## 这是什么
 
@@ -31,7 +33,7 @@ flowchart LR
 
 ## 快速开始
 
-要求：Python ≥ 3.8，无第三方依赖。
+要求：Python ≥ 3.12。**核心通路零第三方依赖**；测试需 `.[dev]`（pytest/httpx），Web/docx 需 `.[web]`/`.[report]`。
 
 ```bash
 # Windows（开发环境实测）
@@ -42,19 +44,22 @@ py -X utf8 -m powerticket run <票据或目录> --report <docx路径/目录>    
 py -X utf8 -m powerticket report <票据>.txt             # 单票 docx 审核报告（需 .[report]）
 py -X utf8 -m powerticket web                           # Web 审核面板 http://127.0.0.1:8000（需 .[web]）
 py -X utf8 -m powerticket benchmark     # 内置基准：解析 F1 / 检出率 / 误报率（零 API 依赖）
-py -X utf8 -m pytest                    # 测试（205 项，全离线）
+py -X utf8 -m pytest                    # 测试（217 项，全离线）
 
 # 重新生成内置带真值评测集（固定 seed 位级一致，详见 data/generator/README.md）
 py -X utf8 data/generator/generate.py --force
+py -X utf8 data/generator/generate.py --check   # 与已提交样例集逐字节对账（不写盘，CI 也跑）
 
 # Linux / macOS
 python3 -X utf8 -m powerticket demo
 
 # 可选：安装为命令行工具 + 开发依赖
-py -m pip install -U pip    # Python 3.8 自带的旧 pip 不支持 pyproject-only 可编辑安装，先升级
+py -m pip install -U pip    # Python 3.12 自带的 pip 通常已够用；老版本先升级
 py -m pip install -e ".[dev]"
 powerticket --help
 ```
+
+> **退出码纪律**：判定退出码时不要加管道（`| head` / `| tail` 会把后者的 0 当成命令的退出码）。本仓各命令的错误退出码是 2（解析/规则错误、extras 缺失），基准门槛未过是 1。
 
 当前实现范围：**7 票种全部解析**（操作票含发令人与操作序列，工作票含计划时间双拆/许可/终结/签发/许可人与安全措施条目，抢修单含许可人与安全措施条目）+ **39 条正式规则全 7 类 check_type**（required_field / time_order / process_signature / ticket_type_match / measure_coverage / five_prevention / consistency，依据挂链知识库三层：官方 PDF/登记卡 → 条文块 → 规则库）+ **内置基准**（35 份带真值样例，字段级 F1 与端到端检出/误报，零 API 可复现）+ **LLM 兜底抽取**（可选，DashScope qwen，断供自动降级纯规则通路）+ **编排与交付**（目录批量审核、docx 审核报告、Web 面板）。
 
@@ -80,6 +85,8 @@ powerticket --help
 | 缺陷检出率 | **1.0**（28/28 缺陷样例，非 pass 集合 == expect∪also_expect 精确对账） |
 | 误报率 | **0**（7 份正常样例零非 pass 结论，28 份缺陷样例零多出结论） |
 | 判定准确率 | **1.0**（35/35） |
+
+★ **检出率 1.0 的构成**：35 份样例共 36 条非 pass 结论，其中 **25 条（69%）来自「依据待核对」的规则**（`endtoend` 把「待人工确认」计入非 pass）。真实可确定性判定的结论只有 11 条。
 
 运行方式（零 API 依赖，固定 seed 数据集位级可复现；门槛未过退出码 1）：
 
@@ -122,7 +129,7 @@ py -X utf8 -m powerticket run data/samples/gen --report reports/   # 每票一�
 
 **docx 审核报告**（extras[report]，`pip install -e ".[report]"`）：章节为元信息 → 一、结论汇总 → 二、分级问题清单（按重大/较大/一般/低风险）→ 三、逐条证据（含原文摘录，取参数卡证据链逐字）→ 四、整改建议 → 五、待人工确认（独立成节）→ 六、签署栏。**报告无外链**：不写 URL/超链接，判据 `powerticket.report.find_external_links`（超链接元素 / External 关系 / 正文 http(s)://）测试锁定。
 
-**Web 审核面板**（extras[web]，`pip install -e ".[web]"`）：上传 → 参数卡 → 校核结论 → 报告预览与 docx 导出（预览与 docx 共用同一章节结构，预览即所得）。前端为零依赖内联单页，**页面 0 外链**断网可演示（无任何外部资源引用，/docs、/redoc 已关闭）：
+**Web 审核面板**（extras[web]，`pip install -e ".[web]"`）：上传 → 参数卡 → 校核结论 → 报告预览与 docx 导出（预览与 docx 共用同一章节结构，预览即所得）。前端为零依赖内联单页，**页面 0 外链**断网可演示（无任何外部资源引用，/docs、/redoc 已关闭）。**`/openapi.json` 保留**（纯 JSON 描述、无外部资源，断网可演示不受影响），便于脚本化调用与客户端生成：
 
 ```bash
 py -X utf8 -m powerticket web              # http://127.0.0.1:8000（--host/--port 可改）
@@ -146,13 +153,13 @@ py -X utf8 -m powerticket web              # http://127.0.0.1:8000（--host/--po
 ├── tests/             # pytest 全离线
 ├── plan/              # 计划文档 00–06 + 交接快照 HANDOFF
 ├── scripts/           # 发布审计脚本（M6）
-└── .github/workflows/ # CI（ubuntu 3.9/3.11/3.13 + 3.8 + windows）
+└── .github/workflows/ # CI（{ubuntu, windows} × {3.12, 3.13}）
 ```
 
 ## 限制与免责声明
 
 - 全部数据为**程序自制/人工编写的虚构演示数据**，设备名、人名、单位名均非真实；
-- 规则依据条款入库时挂 `status` 字段，`待核对` 条目不参与确定性结论（显式标注）；
+- 规则依据条款入库时挂 `status` 字段，`待核对` 规则的**不合规**结论一律降级为「待人工确认」（已实现，`tests/test_pending_gate.py` 锁定）；「合规」结论仍保留；
 - 本项目是教学/研究用途的自动化辅助工具，**不替代人工审核**，不构成安全生产决策依据；
 - 规范原文版权归发布方所有，本仓库仅保存字段结构重构与出处链接，不转载全文。
 

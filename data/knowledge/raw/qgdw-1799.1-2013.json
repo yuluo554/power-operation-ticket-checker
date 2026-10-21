@@ -71,5 +71,8 @@
       "quote": "",
       "status": "待核对"
     }
-  ]
+  ],
+  "reviewed_at": "2026-10-02",
+  "next_review": "2027-10-02",
+  "review_interval": "annual"
 }

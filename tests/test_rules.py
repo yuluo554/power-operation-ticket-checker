@@ -83,7 +83,9 @@ def test_compliant_sample():
 def test_missing_field_flagged():
     card = parse_ticket(SAMPLE.read_text(encoding="utf-8"))
     del card.fields["guardian"]
-    c = next(x for x in run_checks(card, load_rules()) if x.rule_id == "R-OP-001")
+    c = next(
+        x for x in run_checks(card, _rules_verified("R-OP-001")) if x.rule_id == "R-OP-001"
+    )
     assert c.verdict == "不合规"
     assert any("guardian" in e for e in c.evidence)
 
@@ -91,7 +93,9 @@ def test_missing_field_flagged():
 def test_time_reversed_flagged():
     card = parse_ticket(SAMPLE.read_text(encoding="utf-8"))
     card.fields["end_time"] = FieldValue(value="2026-10-15T07:00")
-    c = next(x for x in run_checks(card, load_rules()) if x.rule_id == "R-OP-002")
+    c = next(
+        x for x in run_checks(card, _rules_verified("R-OP-002")) if x.rule_id == "R-OP-002"
+    )
     assert c.verdict == "不合规"
     assert c.risk == "一般"
 
@@ -162,10 +166,26 @@ def _verdict_of(rule_id: str, card: TicketCard, rules=None) -> object:
     return next(c for c in run_checks(card, rules) if c.rule_id == rule_id)
 
 
+def _rules_verified(*rule_ids: str):
+    """内存副本：把指定规则的 basis.status 标为「已核对」，仅用于验证 check_type 判定逻辑。
+
+    依据闸本身（basis.status != 已核对 → 「不合规」降级为「待人工确认」）由
+    tests/test_pending_gate.py 的阳性/阴性双对照锁定。本函数**不改任何数据文件**，
+    也不放宽断言——断言仍是 `verdict == "不合规"`，只是把「依据已核对」这一前提显式化。
+    """
+    wanted = set(rule_ids)
+    out = []
+    for r in load_rules():
+        if r["id"] in wanted:
+            r = {**r, "basis": {**r["basis"], "status": "已核对"}}
+        out.append(r)
+    return out
+
+
 def test_permit_time_out_of_range_flagged():
     card = _work_card()
     card.fields["permit_start"] = FieldValue(value="2026-10-15T07:40")
-    c = _verdict_of("R-W1-004", card)
+    c = _verdict_of("R-W1-004", card, _rules_verified("R-W1-004"))
     assert c.verdict == "不合规"
     rules = load_rules()
     rule_type = {r["id"]: r["check_type"] for r in rules}["R-W1-004"]
@@ -176,7 +196,7 @@ def test_permit_time_out_of_range_flagged():
 def test_permit_time_after_plan_end_flagged():
     card = _work_card()
     card.fields["permit_start"] = FieldValue(value="2026-10-15T17:30")
-    c = _verdict_of("R-W1-004", card)
+    c = _verdict_of("R-W1-004", card, _rules_verified("R-W1-004"))
     assert c.verdict == "不合规"
 
 
@@ -203,7 +223,7 @@ def test_end_time_over_plan_manual_with_delay_hint():
 def test_end_time_earlier_than_permit_flagged():
     card = _work_card()
     card.fields["end_time"] = FieldValue(value="2026-10-15T08:05")
-    c = _verdict_of("R-W1-005", card)
+    c = _verdict_of("R-W1-005", card, _rules_verified("R-W1-005"))
     assert c.verdict == "不合规"
 
 
@@ -243,7 +263,7 @@ def test_no_measures_flagged():
 def test_ticket_type_mismatch_flagged():
     card = TicketCard(ticket_type="work_second")
     card.fields = {"task": FieldValue(value="处理220kV西江线221断路器机构缺陷（需将221断路器由运行位置转检修并停电）")}
-    c = _verdict_of("R-W2-007", card)
+    c = _verdict_of("R-W2-007", card, _rules_verified("R-W2-007"))
     assert c.verdict == "不合规"
     assert any("停电" in e for e in c.evidence)
 
@@ -310,7 +330,7 @@ def test_five_prevention_empty_sequence_manual():
 def test_consistency_kv_mismatch_flagged():
     card = parse_ticket(SAMPLE.read_text(encoding="utf-8"))
     card.operation_sequence[2].action = "检查35kV东湖线111断路器确在断开位置"
-    c = _verdict_of("R-OP-004", card)
+    c = _verdict_of("R-OP-004", card, _rules_verified("R-OP-004"))
     assert c.verdict == "不合规"
     assert any("35" in e and "110" in e for e in c.evidence)
 

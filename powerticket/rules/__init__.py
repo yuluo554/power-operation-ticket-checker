@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from ..models import Conclusion, TicketCard
+from ..models import VERDICT_MANUAL, VERDICT_VIOLATION, Conclusion, TicketCard
 from . import checks
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -66,5 +66,13 @@ def run_checks(card: TicketCard, rules: List[dict]) -> List[Conclusion]:
         if check is None:
             card.warnings.append(f"未知 check_type 已跳过: {rule['id']}({rule['check_type']})")
             continue
-        conclusions.extend(check(rule, card))
+        produced = check(rule, card)
+        # 依据闸（plan/04:70/100 落地）：basis.status 非「已核对」的规则不得下确定性「不合规」，
+        # 一律降级为「待人工确认」；「合规」与既有「待人工确认」不动。
+        # 闸门必须在 check() 之后 —— 跳过规则不执行会让 required_field 的缺失检测整块消失。
+        if (rule.get("basis") or {}).get("status") != "已核对":
+            for c in produced:
+                if c.verdict == VERDICT_VIOLATION:
+                    c.verdict = VERDICT_MANUAL
+        conclusions.extend(produced)
     return conclusions

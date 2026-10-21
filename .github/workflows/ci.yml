@@ -10,16 +10,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { os: ubuntu-latest, python: "3.9" }
-          - { os: ubuntu-latest, python: "3.11" }
+          - { os: ubuntu-latest, python: "3.12" }
           - { os: ubuntu-latest, python: "3.13" }
-          # 3.8 保障开发机基线（ubuntu-24.04 无 3.8 构建，固定 22.04）
-          - { os: ubuntu-22.04, python: "3.8" }
-          - { os: windows-latest, python: "3.11" }
+          - { os: windows-latest, python: "3.12" }
+          - { os: windows-latest, python: "3.13" }
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python }}
       - name: Install
@@ -29,3 +27,6 @@ jobs:
           pip install -e ".[dev,web,report]"
       - name: Test
         run: python -X utf8 -m pytest
+      - name: Sample reproducibility gate
+        # 位级复现门：样例集必须能由 generate.py 逐字节重建（不写盘，只对账）
+        run: python -X utf8 data/generator/generate.py --check

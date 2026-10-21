@@ -1,5 +1,6 @@
 import json
 import re
+import tomllib
 from pathlib import Path
 
 import powerticket
@@ -8,7 +9,18 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_version():
-    assert powerticket.__version__
+    """版本单源：pyproject.version 必须与 powerticket.__version__ 完全相等。
+
+    2026-10-22 二次迭代：原断言 `assert powerticket.__version__` 恒真（非空字符串即过），
+    等于没有守门。改为真比对——抬版本时漏改任一侧即红。
+    """
+    pyproject = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    declared = pyproject["project"]["version"]
+    assert declared, "pyproject.toml 缺 [project].version"
+    assert powerticket.__version__ == declared, (
+        f"版本不一致：pyproject.toml={declared!r} vs "
+        f"powerticket.__version__={powerticket.__version__!r}"
+    )
 
 
 RULES_DIR = ROOT / "data" / "knowledge" / "rules"

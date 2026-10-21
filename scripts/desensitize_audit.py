@@ -10,10 +10,13 @@
      c. 全部提交信息。
 
 任一步 FAIL 非零退出；全部通过打印 DESSENSITIZE_AUDIT_OK。
+`--selftest` 用合成样本做**阳性/阴性双对照**（4 阳性必须报出 + 4 阴性必须不报），
+防止本脚本退化成"只 print 一行 OK"仍被 tests/test_release_audit.py 判绿。
 守门测试 tests/test_release_audit.py 随全量测试与 CI 运行。
 留档纪律：审计输出对命中内容掩码化，本脚本与留档文档均不复述真实敏感字面值；
-新豁免必须登记 ALLOW 并写明理由。
-运行：py -X utf8 scripts/dessensitize_audit.py
+新豁免必须登记 ALLOW 并写明理由。源码内一切敏感样本一律**片段拼接**，
+保证本文件自身能通过第 2 步扫描。
+运行：py -X utf8 scripts/desensitize_audit.py [--selftest]
 """
 import hashlib
 import re
@@ -25,7 +28,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 # 内容级检测模式（通用防泄漏面；命中即 FAIL）。键=模式名（作命名组）。
-# email 收紧原因：宽松版会把 diff 前缀符 + 吞进本地部分，误报 @pytest.fixture 类代码。
+# email 收紧原因：宽松版会把 diff 前缀符 + 吞进本地部分，误报 @pytest.fixture 类代码；
+# 另排除 `git@host` 形态——SSH 远端地址不是个人邮箱（本仓 plan/ 留档里就有该字面形态）。
 PATTERNS = {
     "api_key": r"sk-[A-Za-z0-9]{8,}",
     "key_assign": r"(?i:api_?key|secret|passwd|password|token)\s*[=:]\s*['\"]?[A-Za-z0-9+/_-]{12,}",
@@ -33,7 +37,7 @@ PATTERNS = {
     "idcard": r"\b\d{17}[\dXx]\b",
     "personal_path": r"[C-Fc-f]:[\\/]+[Uu]sers[\\/]+[^\x00-\x1f\\/:*?\"<>|\s]+",
     "intranet_ip": r"\b(?:10\.\d{1,3}|192\.168\.\d{1,3}|172\.(?:1[6-9]|2\d|3[01])\.\d{1,3})\.\d{1,3}\b",
-    "email": r"\b[A-Za-z0-9][A-Za-z0-9._%+-]*@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+\b",
+    "email": r"\b(?!git@)[A-Za-z0-9][A-Za-z0-9._%+-]*@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+\b",
     "internal_domain": r"\b[\w.-]+\.(?:local|intranet|corp|internal)\b",
 }
 _COMBINED = "|".join(f"(?P<{k}>{v})" for k, v in PATTERNS.items())
@@ -173,7 +177,70 @@ def step4_history():
     return True
 
 
-def main():
+def selftest() -> int:
+    """阳性/阴性双对照：4 类阳性必须报出 + 4 类阴性必须不报，缺一即 FAIL。
+
+    样本一律片段拼接（源码里不留能被自家模式命中的完整字面值）。
+    输出只给「PASS/FAIL 名称」，不回显样本原文。
+    """
+    # ---- 阳性样本（必须报出）----
+    key = "sk-" + "a1B2" + "c3D4" + "e5F6" + "g7H8"
+    phone = "1" + "38" + "0011" + "22" + "33"
+    mail = "zhang" + "." + "san" + "@" + "example-corp" + "." + "com"
+    ppath = "C" + ":" + "\\" + "Users" + "\\" + "zhang" + "san" + "\\" + "work"
+    positives = [
+        ("api_key", "配置 " + key),
+        ("phone", "联系人电话 " + phone),
+        ("email", "邮箱 " + mail),
+        ("personal_path", "输出目录 " + ppath),
+    ]
+    # ---- 阴性样本（必须不报）----
+    ssh_remote = "git" + "@" + "github" + "." + "com" + ":" + "owner/repo" + ".git"
+    ticket_no = "20" + "261016" + "0940" + "0000" + "0001"  # 20 位合成票号，非手机号/身份证
+    placeholder = "模式占位：1[3-9]\\d{9}（文档里写的是正则本身，不是真实号码）"
+    sha_hex = "sha256 " + "ab" + "1383934581" + "cd" + "9ba52f10"
+    negatives = [
+        ("email", "远端 " + ssh_remote),
+        ("phone", "票号 " + ticket_no),
+        ("idcard", "校验值 " + ticket_no),
+        ("phone", "占位 " + placeholder),
+        ("idcard", "摘要 " + sha_hex),
+        ("personal_path", "通用示例 X" + ":" + "\\" + "path" + "\\" + "file"),
+    ]
+
+    checks = []
+    for pat, text in positives:
+        hits = scan_text("case", text)
+        got = {p for p, _loc in hits}
+        checks.append((f"阳性 {pat}", pat in got, "" if pat in got else f"未命中（实得 {sorted(got)}）"))
+    for pat, text in negatives:
+        got = {p for p, _loc in scan_text("case", text) if p == pat}
+        checks.append((f"阴性 {pat}", not got, "" if not got else "误报"))
+
+    failed = [name for name, ok, _ in checks if not ok]
+    for name, ok, detail in checks:
+        print(f"{'PASS' if ok else 'FAIL'} {name}{'' if ok else ' <- ' + detail}")
+    if failed:
+        print("DESENSITIZE_SELFTEST_FAIL：" + ", ".join(failed), file=sys.stderr)
+        return 1
+    print(f"DESENSITIZE_SELFTEST_OK {len(checks)} 项反证全部命中")
+    return 0
+
+
+def main(argv=None):
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        prog="desensitize_audit", description="脱敏四步审计（M6 发布门）"
+    )
+    parser.add_argument(
+        "--selftest", action="store_true", help="阳性/阴性双对照自证（不扫仓库）"
+    )
+    args = parser.parse_args(argv)
+
+    if args.selftest:
+        return selftest()
+
     tracked = [f for f in git("ls-files").splitlines() if f.strip()]
     print(f"== 脱敏四步审计 ==（跟踪文件 {len(tracked)} 个）")
     ok = step1_tracked_names(tracked)
